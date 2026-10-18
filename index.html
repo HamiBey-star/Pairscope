@@ -629,5 +629,332 @@ setTimeout(checkAlerts,4000);setInterval(checkAlerts,15000);
 setInterval(function(){load(true)},15000);
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "941b5966f6194fd1b04a161bb81adb5d"}'></script><!-- End Cloudflare Web Analytics -->
+<!-- PairScope Risk DNA: add before </body> -->
+
+<style>
+#ps-risk-dna {
+  --dna-bg: #101722;
+  --dna-line: #29364a;
+  --dna-text: #e7edf7;
+  --dna-muted: #9baac0;
+  margin: 18px 0;
+  padding: 16px;
+  color: var(--dna-text);
+  background: var(--dna-bg);
+  border: 1px solid var(--dna-line);
+  border-radius: 16px;
+  font: 13px/1.5 system-ui, sans-serif;
+}
+#ps-risk-dna * { box-sizing: border-box; }
+#ps-risk-dna h2 { margin: 0; font-size: 19px; }
+#ps-risk-dna p { color: var(--dna-muted); }
+#ps-risk-dna .dna-row {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+}
+#ps-risk-dna input {
+  flex: 1; min-width: 190px; width: 100%;
+  padding: 12px; border-radius: 9px;
+  border: 1px solid var(--dna-line);
+  background: #0b111b; color: white;
+}
+#ps-risk-dna button, #ps-risk-dna a.dna-link {
+  display: inline-block; padding: 10px 13px;
+  border-radius: 9px; border: 1px solid #3c8cff;
+  background: #2878e6; color: white;
+  font-weight: 650; text-decoration: none; cursor: pointer;
+}
+#ps-risk-dna button:disabled { opacity: .55; cursor: wait; }
+#ps-risk-dna .dna-card {
+  padding: 12px; border: 1px solid var(--dna-line);
+  border-radius: 11px; background: #0b111b; margin-top: 12px;
+}
+#ps-risk-dna .dna-score {
+  font-size: 32px; font-weight: 800; margin: 4px 0;
+}
+#ps-risk-dna .dna-muted { color: var(--dna-muted); }
+#ps-risk-dna .dna-risk {
+  padding: 10px 0; border-bottom: 1px solid var(--dna-line);
+}
+#ps-risk-dna .dna-risk:last-child { border-bottom: 0; }
+#ps-risk-dna .dna-links { display: flex; gap: 8px; flex-wrap: wrap; }
+#ps-risk-dna .dna-links a {
+  color: #7db9ff; overflow-wrap: anywhere;
+}
+#ps-risk-dna .dna-error { color: #ffb4b4; }
+#ps-risk-dna .dna-ok { color: #75e2b1; }
+</style>
+
+<section id="ps-risk-dna" aria-labelledby="ps-dna-title">
+  <div>
+    <h2 id="ps-dna-title">◈ PairScope Risk DNA</h2>
+    <p>Solana token risk intelligence, backed by external report data.</p>
+  </div>
+
+  <form id="ps-dna-form" class="dna-row">
+    <input
+      id="ps-dna-mint"
+      type="text"
+      placeholder="Paste Solana token mint address"
+      aria-label="Solana token mint address"
+      autocomplete="off"
+      spellcheck="false"
+      required
+    >
+    <button id="ps-dna-scan" type="submit">Analyze token</button>
+  </form>
+
+  <div id="ps-dna-status" role="status" aria-live="polite">
+    Enter a mint address to request a live security report.
+  </div>
+
+  <div id="ps-dna-results" hidden>
+    <div class="dna-card">
+      <div class="dna-muted">Provider-reported normalized risk score</div>
+      <div id="ps-dna-score" class="dna-score">—</div>
+      <strong id="ps-dna-verdict">No assessment yet</strong>
+      <p id="ps-dna-explanation"></p>
+      <div id="ps-dna-stats"></div>
+    </div>
+
+    <div class="dna-card">
+      <strong>Detected risk factors</strong>
+      <div id="ps-dna-risks"></div>
+    </div>
+
+    <div class="dna-card">
+      <strong>Review this token</strong>
+      <p class="dna-muted">
+        These links open external services. Verify the mint address on
+        each site before making a trading decision.
+      </p>
+      <div id="ps-dna-links" class="dna-links"></div>
+    </div>
+  </div>
+
+  <p class="dna-muted">
+    Risk screening is not an audit or a guarantee. Missing data is not
+    evidence of safety. Provider scores and coverage may change.
+  </p>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const form = document.getElementById("ps-dna-form");
+  const input = document.getElementById("ps-dna-mint");
+  const button = document.getElementById("ps-dna-scan");
+  const status = document.getElementById("ps-dna-status");
+  const results = document.getElementById("ps-dna-results");
+  const scoreEl = document.getElementById("ps-dna-score");
+  const verdictEl = document.getElementById("ps-dna-verdict");
+  const explanationEl = document.getElementById("ps-dna-explanation");
+  const statsEl = document.getElementById("ps-dna-stats");
+  const risksEl = document.getElementById("ps-dna-risks");
+  const linksEl = document.getElementById("ps-dna-links");
+
+  let requestNumber = 0;
+
+  function validSolanaMint(value) {
+    // Base58 alphabet; excludes 0, O, I and l.
+    return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
+  }
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = String(text);
+    return node;
+  }
+
+  function addStat(label, value) {
+    const row = el("div", "dna-risk");
+    row.appendChild(el("strong", "", label + ": "));
+    row.appendChild(el("span", "", value));
+    statsEl.appendChild(row);
+  }
+
+  function findNumber(obj, keys) {
+    for (const key of keys) {
+      const value = obj && obj[key];
+      if (value !== null && value !== undefined &&
+          value !== "" && Number.isFinite(Number(value))) {
+        return Number(value);
+      }
+    }
+    return null;
+  }
+
+  function renderRiskItems(report) {
+    risksEl.replaceChildren();
+
+    const risks = Array.isArray(report.risks) ? report.risks : [];
+
+    if (!risks.length) {
+      risksEl.appendChild(el(
+        "p",
+        "dna-muted",
+        "The provider returned no risk items in this response. This does not prove the token is safe."
+      ));
+      return;
+    }
+
+    risks.slice(0, 30).forEach(function (risk) {
+      const row = el("div", "dna-risk");
+      row.appendChild(el(
+        "strong",
+        "",
+        risk.name || risk.description || "Provider risk finding"
+      ));
+
+      const details = [];
+      if (risk.level) details.push("Level: " + risk.level);
+      if (risk.value !== undefined && risk.value !== "") {
+        details.push("Value: " + risk.value);
+      }
+      if (risk.description && risk.name) details.push(risk.description);
+
+      if (details.length) {
+        row.appendChild(el("div", "dna-muted", details.join(" · ")));
+      }
+      risksEl.appendChild(row);
+    });
+  }
+
+  function renderLinks(mint) {
+    linksEl.replaceChildren();
+
+    const links = [
+      ["RugCheck report", "https://rugcheck.xyz/tokens/" + encodeURIComponent(mint)],
+      ["Solscan", "https://solscan.io/token/" + encodeURIComponent(mint)],
+      ["DexScreener", "https://dexscreener.com/solana/" + encodeURIComponent(mint)]
+    ];
+
+    links.forEach(function (item) {
+      const a = el("a", "", item[0]);
+      a.href = item[1];
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      linksEl.appendChild(a);
+    });
+  }
+
+  async function getReport(mint, signal) {
+    const url =
+      "https://api.rugcheck.xyz/v1/tokens/" +
+      encodeURIComponent(mint) +
+      "/report/summary";
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      signal: signal
+    });
+
+    if (!response.ok) {
+      throw new Error("Security provider returned HTTP " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new Error("Unexpected security report format.");
+    }
+
+    return data;
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const mint = input.value.trim();
+
+    if (!validSolanaMint(mint)) {
+      status.className = "dna-error";
+      status.textContent =
+        "Enter a valid-looking Solana mint address (32–44 Base58 characters).";
+      results.hidden = true;
+      return;
+    }
+
+    const thisRequest = ++requestNumber;
+    const controller = new AbortController();
+    const timeout = setTimeout(function () {
+      controller.abort();
+    }, 15000);
+
+    button.disabled = true;
+    results.hidden = true;
+    status.className = "dna-muted";
+    status.textContent = "Requesting a live security report…";
+
+    try {
+      const report = await getReport(mint, controller.signal);
+
+      if (thisRequest !== requestNumber) return;
+
+      // Accept only the provider's documented normalized score.
+      // Never turn a missing score into zero.
+      const score = findNumber(report, [
+        "score_normalised",
+        "score_normalized",
+        "risk_score_normalised",
+        "risk_score_normalized"
+      ]);
+
+      results.hidden = false;
+      scoreEl.textContent = score === null ? "N/A" : score + " / 100";
+      statsEl.replaceChildren();
+
+      if (score === null) {
+        verdictEl.textContent = "Score unavailable";
+        explanationEl.textContent =
+          "The report did not contain a recognized normalized score. No score has been fabricated.";
+      } else if (score >= 60) {
+        verdictEl.textContent = "High reported risk";
+        explanationEl.textContent =
+          "The provider's normalized score is elevated. Review the individual findings before deciding.";
+      } else if (score >= 30) {
+        verdictEl.textContent = "Caution";
+        explanationEl.textContent =
+          "The provider reports risk signals that deserve further investigation.";
+      } else {
+        verdictEl.textContent = "Lower reported risk";
+        explanationEl.textContent =
+          "The provider's score is relatively low. This is not a declaration that the token is safe.";
+      }
+
+      const lpLocked = findNumber(report, ["lpLockedPct", "lp_locked_pct"]);
+      if (lpLocked !== null) {
+        addStat("Liquidity locked (reported)", lpLocked + "%");
+      }
+
+      if (report.tokenProgram) {
+        addStat("Token program", report.tokenProgram);
+      }
+
+      renderRiskItems(report);
+      renderLinks(mint);
+
+      status.className = "dna-ok";
+      status.textContent =
+        "Report received from RugCheck. Check the findings and verify the mint address.";
+    } catch (error) {
+      if (thisRequest !== requestNumber) return;
+
+      results.hidden = true;
+      status.className = "dna-error";
+      status.textContent =
+        error.name === "AbortError"
+          ? "The security request timed out. Try again later."
+          : "Live report unavailable: " + error.message +
+            ". No risk score has been generated.";
+    } finally {
+      clearTimeout(timeout);
+      if (thisRequest === requestNumber) button.disabled = false;
+    }
+  });
+})();
+</script>
 </body>
 </html>
