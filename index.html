@@ -955,6 +955,22 @@ setInterval(function(){load(true)},15000);
     }
   });
 })();
+  function addrCell(r) {
+  var a = r.addr || r.address || r.baseToken?.address || "";
+
+  if (!a) {
+    return '<td>Address unavailable</td>';
+  }
+
+  var shortA = a.slice(0, 6) + "..." + a.slice(-5);
+
+  return '<td><code title="' + esc(a) + '">' +
+    esc(shortA) + '</code> ' +
+    '<button type="button" onclick="navigator.clipboard.writeText(\'' +
+    a + '\')">Copy</button> ' +
+    '<a target="_blank" href="https://solscan.io/token/' +
+    encodeURIComponent(a) + '">View</a></td>';
+}
 </script>
 </body>
 </html>
