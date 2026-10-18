@@ -240,7 +240,7 @@ function getWatch(){
 function getSearch(q){return fetch(B+"/latest/dex/search?q="+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(d){return dedupe((d.pairs||[]).map(map)).slice(0,60)})}
 function load(silent){
   if(mode==="check"||mode==="picks"||mode==="map")return;if(silent&&loading)return;var id=++reqId;loading=true;
-  if(!silent)$("body").innerHTML='<tr><td colspan="13" class="q" style="text-align:center;padding:24px">Loading…</td></tr>';
+  if(!silent)$("body").innerHTML='<tr><td colspan="14" class="q" style="text-align:center;padding:24px">Loading…</td></tr>';
   (mode==="trending"?getTrending():mode==="new"?getNew():mode==="surge"?getSurge():mode==="featured"?getFeatured():mode==="watch"?getWatch():(mode==="gainers"||mode==="losers")?Promise.all([getTrending(),getNew()]).then(function(a){return dedupe(a[0].concat(a[1]))}):getSearch(term)).then(function(rows){if(id!==reqId)return;if(mode==="gainers")rows=rows.filter(function(r){return r.h24>0}).sort(function(a,b){return b.h24-a.h24}).slice(0,60);if(mode==="losers")rows=rows.filter(function(r){return r.h24<0}).sort(function(a,b){return a.h24-b.h24}).slice(0,60);D=rows;if(!silent)chain="all";chips();render();pulse();$("live").innerHTML='<span class="dot"></span>Live · updated '+new Date().toLocaleTimeString()})
   .catch(function(){if(id!==reqId)return;if(!silent)$("body").innerHTML='<tr><td colspan="13" class="q" style="text-align:center;padding:24px">Could not load data. Check your connection.</td></tr>'})
   .then(function(){if(id===reqId)loading=false});
