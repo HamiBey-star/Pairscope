@@ -59,8 +59,25 @@ svg.sp{width:100%;height:110px;display:block;margin-top:8px}
 *, *::before, *::after {
   box-sizing: border-box;
 }
-</style>
+@media (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
 
+  button, select {
+    min-height: 42px;
+  }
+
+  input, select, textarea {
+    font-size: 16px;
+    max-width: 100%;
+  }
+
+  img, canvas, svg {
+    max-width: 100%;
+  }
+}  
+</style>
 <style id="pairscope-minimal-fintech-overrides">
 :root{color-scheme:dark;--ps-bg:#080d18;--ps-panel:#101827;--ps-panel-2:#131e30;--ps-border:rgba(148,163,184,.16);--ps-text:#edf3fc;--ps-muted:#91a0b6;--ps-blue:#65a7ff;--ps-green:#42d6a0;--ps-radius:14px}
 *,*::before,*::after{box-sizing:border-box}
