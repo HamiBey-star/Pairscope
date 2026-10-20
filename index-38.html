@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.dexscreener.com https://dd.dexscreener.com; connect-src https://cloudflareinsights.com https://pairscope-alerts.dr-hamzakhan0.workers.dev https://pairscope-featured.dr-hamzakhan0.workers.dev https://api.dexscreener.com https://api.geckoterminal.com https://api.gopluslabs.io https://api.paraswap.io https://lite-api.jup.ag; manifest-src 'self' blob: data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+/* PairScope upgrade: client-side API cache + in-flight dedupe (cuts rate-limit hits) */
+(function(){var of=window.fetch.bind(window),C=new Map(),F=new Map(),
+T=[["https://api.dexscreener.com/",4e3],["https://api.geckoterminal.com/",3e4],["https://api.gopluslabs.io/",6e5]];
+function ttl(u){for(var i=0;i<T.length;i++)if(u.indexOf(T[i][0])===0)return T[i][1];return 0}
+window.fetch=function(u,o){var url=typeof u==="string"?u:"",t=(!o||(!o.method||o.method==="GET")&&!o.signal)?ttl(url):0;
+if(!t)return of(u,o);
+var h=C.get(url);if(h&&Date.now()-h.t<t)return Promise.resolve(h.r.clone());
+var f=F.get(url);if(f)return f.then(function(r){return r.clone()});
+f=of(u,o).then(function(r){F.delete(url);if(r.ok){C.set(url,{t:Date.now(),r:r.clone()});if(C.size>300)C.delete(C.keys().next().value)}return r},function(e){F.delete(url);throw e});
+F.set(url,f);return f.then(function(r){return r.clone()})}})();
+</script>
+<title>PairScope</title>
+<meta name="description" content="PairScope: live DEX pair scanner with Heat scores, a Risk Radar and a contract security checker for any token.">
+<meta name="theme-color" content="#0b0e11">
+<meta property="og:type" content="website">
+<meta property="og:title" content="PairScope">
+<meta property="og:description" content="Live DEX pair scanner with Heat scores, a Risk Radar and a contract security checker for any token.">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:site_name" content="PairScope">
+<meta property="og:url" content="https://pairscope.dr-hamzakhan0.workers.dev/">
+<meta property="og:image" content="https://pairscope.dr-hamzakhan0.workers.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:image" content="https://pairscope.dr-hamzakhan0.workers.dev/og.png">
+<meta name="twitter:title" content="PairScope">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%20width%3D%22512%22%20height%3D%22512%22%20xmlns%3Ac2pa%3D%22http%3A//c2pa.org/manifest%22%3E%3Cmetadata%3E%3Cc2pa%3Amanifest%3EAAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTozMGJjNDgzOS1mMzAzLTRjMzUtYWI2ZC03ZjY0YWFmN2MwN2UAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaHo02zZtonGTX42X2QM6gT4AAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDozYjJhNjI5NC0yMDhlLTQ0MjctOWE3MC1lNDQ5NTY0YjUxYzBscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoJt2bDdDL0EC9Zxerx8wUSgAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggxCr2HaspmF4FNTLPJF%2B/vZYniClvFCQjEUjmGdN4jqukZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaNGDeXTWTOZ6/b9imZgSZ9gAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRNAAAAAAAAAAAAAAAAAGRoYXNoWCBGaGJCIn4PkD1MN8vh0lAV/U2WJmXyfjFFzSElw1quGWRuYW1lbmp1bWJmIG1hbmlmZXN0amV4Y2x1c2lvbnOBomVzdGFydBiWZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjMwYmM0ODM5LWYzMDMtNGMzNS1hYjZkLTdmNjRhYWY3YzA3ZS9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjFlZjA2YTBkLTMxNDUtNGY4MC04ZmM4LTIzY2JhZjkxMGRlNHJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCDEKvYdqymYXgU1Ms8kX7%2B9lieIKW8UJCMRSOYZ03iOq6JjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggCqod4i2n5bR1HyA4C15F9SOsXGsH9ckBlrLVa1CP%2By%2BiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggR4V8EgzZy3hXANst4jJWuDbI%2BBGoj2CvwzCh1AbvANN0Y2xhaW1fZ2VuZXJhdG9yX2luZm%2BjZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj%2BOPEz5o%2BnMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1%2BUCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9%2B1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQNRDYcJp70Y6sJauQiUdmWEwOvTwVP6maQiF2zL/MNVIxxR0AzgJHPr0T2HVq9Pd6ITW4a31nq/a39kG%2BHUSfvQ%3D%3C/c2pa%3Amanifest%3E%3C/metadata%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%230b1220%22/%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2314264a%22/%3E%20%3C/linearGradient%3E%20%3ClinearGradient%20id%3D%22line%22%20x1%3D%220%22%20y1%3D%221%22%20x2%3D%221%22%20y2%3D%220%22%3E%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2300e0b8%22/%3E%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%234da3ff%22/%3E%20%3C/linearGradient%3E%20%3C/defs%3E%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22url%28%23bg%29%22/%3E%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%22150%22%20fill%3D%22none%22%20stroke%3D%22url%28%23line%29%22%20stroke-width%3D%2222%22/%3E%20%3Cg%20stroke%3D%22%234da3ff%22%20stroke-width%3D%2216%22%20stroke-linecap%3D%22round%22%3E%20%3Cline%20x1%3D%22256%22%20y1%3D%2262%22%20x2%3D%22256%22%20y2%3D%22108%22/%3E%20%3Cline%20x1%3D%22256%22%20y1%3D%22404%22%20x2%3D%22256%22%20y2%3D%22450%22/%3E%20%3Cline%20x1%3D%2262%22%20y1%3D%22256%22%20x2%3D%22108%22%20y2%3D%22256%22/%3E%20%3Cline%20x1%3D%22404%22%20y1%3D%22256%22%20x2%3D%22450%22%20y2%3D%22256%22/%3E%20%3C/g%3E%20%3Cpolyline%20points%3D%22160%2C310%20212%2C262%20254%2C292%20302%2C216%20352%2C196%22%20fill%3D%22none%22%20stroke%3D%22url%28%23line%29%22%20stroke-width%3D%2220%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%20%3Ccircle%20cx%3D%22160%22%20cy%3D%22310%22%20r%3D%2217%22%20fill%3D%22%2300e0b8%22/%3E%20%3Ccircle%20cx%3D%22352%22%20cy%3D%22196%22%20r%3D%2217%22%20fill%3D%22%234da3ff%22/%3E%20%3C/svg%3E">
+<link rel="apple-touch-icon" id="ati">
+<style>
+:root{--bg:#0b0e11;--panel:#12171d;--text:#e6e8ea;--muted:#8b95a1;--line:#222a33;--up:#2ecc71;--down:#ff5c5c;--accent:#4da3ff;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:13px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:12px}
+h1{font-size:20px;margin:2px 0 10px;display:flex;align-items:center;gap:10px}
+h1 img{border-radius:9px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input{flex:1;min-width:180px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:14px}
+.tabs,.chips{display:flex;gap:6px;overflow-x:auto;margin:10px 0}
+.tab,.chip{flex:none;padding:6px 12px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:12px;cursor:pointer}
+.tab.on,.chip.on{background:var(--accent);border-color:var(--accent);color:#04101f;font-weight:600}
+.live{color:var(--muted);font-size:11px;margin-left:auto}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--up);margin-right:5px}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:860px}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel)}
+th{font-size:11px;color:var(--muted);font-weight:600;cursor:pointer;user-select:none;border-bottom:1px solid var(--line)}
+th.on{color:var(--accent)}
+tbody tr{border-top:1px solid var(--line);cursor:pointer}
+tbody tr:hover td{background:#182029}
+.star{cursor:pointer;color:var(--muted);font-size:15px;margin-right:6px}.star.on{color:#f5c542}
+.n{color:var(--muted);font-size:11px;margin-right:6px}
+.sym{font-weight:600}.q{color:var(--muted);font-size:11px}
+.up{color:var(--up)}.down{color:var(--down)}
+#detail{position:fixed;inset:auto 0 0 0;max-width:560px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));transform:translateY(110%);transition:transform .2s;max-height:80%;overflow:auto;box-shadow:0 -8px 30px rgba(0,0,0,.5)}
+#detail.open{transform:none}
+.hd{display:flex;justify-content:space-between;align-items:center}
+.x{background:none;border:0;color:var(--muted);font-size:24px;cursor:pointer}
+.big{font-size:26px;font-weight:700;margin:4px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.st{background:var(--bg);border-radius:8px;padding:10px}.st b{display:block;font-size:15px}.st span{color:var(--muted);font-size:12px}
+svg.sp{width:100%;height:110px;display:block;margin-top:8px}
+.tfs{display:flex;gap:6px;margin-top:6px}.tf{padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:12px;cursor:pointer}.tf.on{background:var(--accent);border-color:var(--accent);color:#04101f;font-weight:600}
+.al{display:flex;gap:6px;margin-top:12px;align-items:center}
+.al select,.al input,.al button{padding:7px 8px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:13px}
+.al input{min-width:0;flex:1;width:100%}
+.al button{background:var(--accent);border-color:var(--accent);color:#04101f;font-weight:600;cursor:pointer}
+.ai{display:flex;justify-content:space-between;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:4px 0;font-size:12px}
+.x2{cursor:pointer;color:var(--muted);padding:0 4px}
+#toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:50;display:none;background:var(--accent);color:#04101f;font-weight:600;padding:12px 14px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.5);cursor:pointer}
+.rk{display:inline-block;min-width:34px;padding:2px 8px;border-radius:99px;font-weight:700;font-size:11px;text-align:center}
+.rk-g{background:rgba(46,204,113,.18);color:var(--up)}.rk-y{background:rgba(245,197,66,.18);color:#f5c542}.rk-r{background:rgba(255,92,92,.18);color:var(--down)}
+.rbox{background:var(--bg);border-radius:10px;padding:10px;margin-top:12px}.rbox ul{margin:8px 0 0;padding:0;list-style:none}.rbox li{font-size:12px;margin:4px 0}.rbox .bad{color:#ffb74d}.rbox .good{color:var(--muted)}.rbox small{display:block;color:var(--muted);font-size:10.5px;margin-top:8px}
+.rk-h{background:rgba(255,140,0,.2);color:#ff9f43}.rk-m{background:rgba(139,149,161,.15);color:var(--muted)}
+.pulse{display:flex;gap:14px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted);margin-bottom:8px}
+.note{color:var(--muted);font-size:11px;margin:12px 2px 90px}
+#checker a,#feat a{color:var(--accent)}.ptb{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}.ptb table{min-width:560px}.tl{display:inline-block;padding:7px 12px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}.tl.b{color:var(--up)}.tl.s{color:var(--down)}#checker a.tl.b{color:var(--up)}#checker a.tl.s{color:var(--down)}#checker .rbox{margin-top:12px}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%201200%20900%27%20preserveAspectRatio=%27xMidYMid%20slice%27%3E%3Cdefs%3E%0A%3CradialGradient%20id=%27g1%27%20cx=%2755%25%27%20cy=%2730%25%27%20r=%2755%25%27%3E%3Cstop%20offset=%270%27%20stop-color=%27%2300e0b8%27%20stop-opacity=%27.20%27/%3E%3Cstop%20offset=%271%27%20stop-color=%27%2300e0b8%27%20stop-opacity=%270%27/%3E%3C/radialGradient%3E%0A%3CradialGradient%20id=%27g2%27%20cx=%2710%25%27%20cy=%2795%25%27%20r=%2765%25%27%3E%3Cstop%20offset=%270%27%20stop-color=%27%234da3ff%27%20stop-opacity=%27.24%27/%3E%3Cstop%20offset=%271%27%20stop-color=%27%234da3ff%27%20stop-opacity=%270%27/%3E%3C/radialGradient%3E%0A%3CradialGradient%20id=%27g3%27%20cx=%2795%25%27%20cy=%2785%25%27%20r=%2750%25%27%3E%3Cstop%20offset=%270%27%20stop-color=%27%237b61ff%27%20stop-opacity=%27.14%27/%3E%3Cstop%20offset=%271%27%20stop-color=%27%237b61ff%27%20stop-opacity=%270%27/%3E%3C/radialGradient%3E%0A%3ClinearGradient%20id=%27ln%27%20x1=%270%27%20y1=%271%27%20x2=%271%27%20y2=%270%27%3E%3Cstop%20offset=%270%27%20stop-color=%27%2300e0b8%27/%3E%3Cstop%20offset=%271%27%20stop-color=%27%234da3ff%27/%3E%3C/linearGradient%3E%0A%3CradialGradient%20id=%27vg%27%20cx=%2750%25%27%20cy=%2745%25%27%20r=%2778%25%27%3E%3Cstop%20offset=%27.5%27%20stop-color=%27%230b0e11%27%20stop-opacity=%270%27/%3E%3Cstop%20offset=%271%27%20stop-color=%27%230b0e11%27%20stop-opacity=%27.9%27/%3E%3C/radialGradient%3E%0A%3Cfilter%20id=%27bl%27%20x=%27-20%25%27%20y=%27-20%25%27%20width=%27140%25%27%20height=%27140%25%27%3E%3CfeGaussianBlur%20stdDeviation=%277%27/%3E%3C/filter%3E%0A%3Cpattern%20id=%27gr%27%20width=%2750%27%20height=%2750%27%20patternUnits=%27userSpaceOnUse%27%3E%3Cpath%20d=%27M50%200H0V50%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%27.055%27/%3E%3C/pattern%3E%0A%3C/defs%3E%3Crect%20width=%271200%27%20height=%27900%27%20fill=%27%230b0e11%27/%3E%3Crect%20width=%271200%27%20height=%27900%27%20fill=%27url(%23g1)%27/%3E%3Crect%20width=%271200%27%20height=%27900%27%20fill=%27url(%23g2)%27/%3E%3Crect%20width=%271200%27%20height=%27900%27%20fill=%27url(%23g3)%27/%3E%3Crect%20width=%271200%27%20height=%27900%27%20fill=%27url(%23gr)%27/%3E%3Ccircle%20cx=%27600%27%20cy=%27300%27%20r=%2770%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%270.22%27%20stroke-width=%271.4%27/%3E%3Ccircle%20cx=%27600%27%20cy=%27300%27%20r=%27140%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%270.18%27%20stroke-width=%271.4%27%20stroke-dasharray=%273%209%27/%3E%3Ccircle%20cx=%27600%27%20cy=%27300%27%20r=%27230%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%270.15%27%20stroke-width=%271.4%27/%3E%3Ccircle%20cx=%27600%27%20cy=%27300%27%20r=%27340%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%270.12%27%20stroke-width=%271.4%27/%3E%3Ccircle%20cx=%27600%27%20cy=%27300%27%20r=%27470%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%270.09%27%20stroke-width=%271.4%27%20stroke-dasharray=%273%209%27/%3E%3Ccircle%20cx=%27600%27%20cy=%27300%27%20r=%27640%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%270.06%27%20stroke-width=%271.4%27/%3E%3Ccircle%20cx=%27600%27%20cy=%27300%27%20r=%27340%27%20fill=%27none%27%20stroke=%27url(%23ln)%27%20stroke-opacity=%27.35%27%20stroke-width=%272%27%20stroke-dasharray=%27120%202020%27%20transform=%27rotate(-70%20600%20300)%27/%3E%3Cg%20stroke=%27%234da3ff%27%20stroke-opacity=%27.10%27%20stroke-width=%271%27%3E%3Cline%20x1=%270%27%20y1=%27300%27%20x2=%271200%27%20y2=%27300%27/%3E%3Cline%20x1=%27600%27%20y1=%270%27%20x2=%27600%27%20y2=%27900%27/%3E%3C/g%3E%3Cpath%20d=%27M940.0%20300.0L946.0%20300.0M938.7%20329.6L950.7%20330.7M934.8%20359.0L940.7%20360.1M928.4%20388.0L940.0%20391.1M919.5%20416.3L925.1%20418.3M908.1%20443.7L919.0%20448.8M894.4%20470.0L899.6%20473.0M878.5%20495.0L888.3%20501.9M860.5%20518.5L865.1%20522.4M840.4%20540.4L848.9%20548.9M818.5%20560.5L822.4%20565.1M795.0%20578.5L801.9%20588.3M770.0%20594.4L773.0%20599.6M743.7%20608.1L748.8%20619.0M716.3%20619.5L718.3%20625.1M688.0%20628.4L691.1%20640.0M659.0%20634.8L660.1%20640.7M629.6%20638.7L630.7%20650.7M600.0%20640.0L600.0%20646.0M570.4%20638.7L569.3%20650.7M541.0%20634.8L539.9%20640.7M512.0%20628.4L508.9%20640.0M483.7%20619.5L481.7%20625.1M456.3%20608.1L451.2%20619.0M430.0%20594.4L427.0%20599.6M405.0%20578.5L398.1%20588.3M381.5%20560.5L377.6%20565.1M359.6%20540.4L351.1%20548.9M339.5%20518.5L334.9%20522.4M321.5%20495.0L311.7%20501.9M305.6%20470.0L300.4%20473.0M291.9%20443.7L281.0%20448.8M280.5%20416.3L274.9%20418.3M271.6%20388.0L260.0%20391.1M265.2%20359.0L259.3%20360.1M261.3%20329.6L249.3%20330.7M260.0%20300.0L254.0%20300.0M261.3%20270.4L249.3%20269.3M265.2%20241.0L259.3%20239.9M271.6%20212.0L260.0%20208.9M280.5%20183.7L274.9%20181.7M291.9%20156.3L281.0%20151.2M305.6%20130.0L300.4%20127.0M321.5%20105.0L311.7%2098.1M339.5%2081.5L334.9%2077.6M359.6%2059.6L351.1%2051.1M381.5%2039.5L377.6%2034.9M405.0%2021.5L398.1%2011.7M430.0%205.6L427.0%200.4M456.3%20-8.1L451.2%20-19.0M483.7%20-19.5L481.7%20-25.1M512.0%20-28.4L508.9%20-40.0M541.0%20-34.8L539.9%20-40.7M570.4%20-38.7L569.3%20-50.7M600.0%20-40.0L600.0%20-46.0M629.6%20-38.7L630.7%20-50.7M659.0%20-34.8L660.1%20-40.7M688.0%20-28.4L691.1%20-40.0M716.3%20-19.5L718.3%20-25.1M743.7%20-8.1L748.8%20-19.0M770.0%205.6L773.0%200.4M795.0%2021.5L801.9%2011.7M818.5%2039.5L822.4%2034.9M840.4%2059.6L848.9%2051.1M860.5%2081.5L865.1%2077.6M878.5%20105.0L888.3%2098.1M894.4%20130.0L899.6%20127.0M908.1%20156.3L919.0%20151.2M919.5%20183.7L925.1%20181.7M928.4%20212.0L940.0%20208.9M934.8%20241.0L940.7%20239.9M938.7%20270.4L950.7%20269.3%27%20stroke=%27%234da3ff%27%20stroke-opacity=%27.25%27%20stroke-width=%271.2%27/%3E%3Cpath%20d=%27M600%20300L820.7%20-115.0A470%20470%200%200%201%201047.0%20154.8Z%27%20fill=%27%2300e0b8%27%20fill-opacity=%27.07%27/%3E%3Cline%20x1=%27600%27%20y1=%27300%27%20x2=%271047.0%27%20y2=%27154.8%27%20stroke=%27%2300e0b8%27%20stroke-opacity=%27.45%27%20stroke-width=%271.6%27/%3E%3Ccircle%20cx=%27776.2%27%20cy=%27152.2%27%20r=%2716%27%20fill=%27none%27%20stroke=%27%2300e0b8%27%20stroke-opacity=%27.25%27/%3E%3Ccircle%20cx=%27776.2%27%20cy=%27152.2%27%20r=%274%27%20fill=%27%2300e0b8%27%20fill-opacity=%27.8%27/%3E%3Ccircle%20cx=%27900.2%27%20cy=%27140.4%27%20r=%2716%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%27.25%27/%3E%3Ccircle%20cx=%27900.2%27%20cy=%27140.4%27%20r=%274%27%20fill=%27%234da3ff%27%20fill-opacity=%27.8%27/%3E%3Ccircle%20cx=%27741.0%27%20cy=%27351.3%27%20r=%2716%27%20fill=%27none%27%20stroke=%27%2300e0b8%27%20stroke-opacity=%27.25%27/%3E%3Ccircle%20cx=%27741.0%27%20cy=%27351.3%27%20r=%274%27%20fill=%27%2300e0b8%27%20fill-opacity=%27.8%27/%3E%3Ccircle%20cx=%27357.5%27%20cy=%27440.0%27%20r=%2716%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%27.25%27/%3E%3Ccircle%20cx=%27357.5%27%20cy=%27440.0%27%20r=%274%27%20fill=%27%234da3ff%27%20fill-opacity=%27.8%27/%3E%3Ccircle%20cx=%27402.7%27%20cy=%27228.2%27%20r=%2716%27%20fill=%27none%27%20stroke=%27%2300e0b8%27%20stroke-opacity=%27.25%27/%3E%3Ccircle%20cx=%27402.7%27%20cy=%27228.2%27%20r=%274%27%20fill=%27%2300e0b8%27%20fill-opacity=%27.8%27/%3E%3Ccircle%20cx=%27565.1%27%20cy=%27698.5%27%20r=%2716%27%20fill=%27none%27%20stroke=%27%237b61ff%27%20stroke-opacity=%27.25%27/%3E%3Ccircle%20cx=%27565.1%27%20cy=%27698.5%27%20r=%274%27%20fill=%27%237b61ff%27%20fill-opacity=%27.8%27/%3E%3Ccircle%20cx=%27450.0%27%20cy=%2740.2%27%20r=%2716%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%27.25%27/%3E%3Ccircle%20cx=%27450.0%27%20cy=%2740.2%27%20r=%274%27%20fill=%27%234da3ff%27%20fill-opacity=%27.8%27/%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%2730%27%20x2=%2730%27%20y1=%27782.9%27%20y2=%27820.6%27/%3E%3Crect%20x=%2723%27%20y=%27797.0%27%20width=%2714%27%20height=%273.0%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%2756%27%20x2=%2756%27%20y1=%27781.0%27%20y2=%27811.6%27/%3E%3Crect%20x=%2749%27%20y=%27794.1%27%20width=%2714%27%20height=%272.9%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%2782%27%20x2=%2782%27%20y1=%27765.8%27%20y2=%27809.5%27/%3E%3Crect%20x=%2775%27%20y=%27779.0%27%20width=%2714%27%20height=%2715.1%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27108%27%20x2=%27108%27%20y1=%27773.3%27%20y2=%27798.5%27/%3E%3Crect%20x=%27101%27%20y=%27779.0%27%20width=%2714%27%20height=%2710.0%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27134%27%20x2=%27134%27%20y1=%27750.5%27%20y2=%27805.5%27/%3E%3Crect%20x=%27127%27%20y=%27769.1%27%20width=%2714%27%20height=%2719.9%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27160%27%20x2=%27160%27%20y1=%27725.0%27%20y2=%27790.4%27/%3E%3Crect%20x=%27153%27%20y=%27746.6%27%20width=%2714%27%20height=%2722.4%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27186%27%20x2=%27186%27%20y1=%27731.6%27%20y2=%27756.3%27/%3E%3Crect%20x=%27179%27%20y=%27746.6%27%20width=%2714%27%20height=%272.8%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27212%27%20x2=%27212%27%20y1=%27711.6%27%20y2=%27754.6%27/%3E%3Crect%20x=%27205%27%20y=%27725.1%27%20width=%2714%27%20height=%2724.4%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27238%27%20x2=%27238%27%20y1=%27699.2%27%20y2=%27729.6%27/%3E%3Crect%20x=%27231%27%20y=%27707.6%27%20width=%2714%27%20height=%2717.5%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27264%27%20x2=%27264%27%20y1=%27689.2%27%20y2=%27726.7%27/%3E%3Crect%20x=%27257%27%20y=%27701.1%27%20width=%2714%27%20height=%276.4%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27290%27%20x2=%27290%27%20y1=%27681.0%27%20y2=%27714.1%27/%3E%3Crect%20x=%27283%27%20y=%27696.6%27%20width=%2714%27%20height=%274.6%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27316%27%20x2=%27316%27%20y1=%27684.3%27%20y2=%27706.6%27/%3E%3Crect%20x=%27309%27%20y=%27696.6%27%20width=%2714%27%20height=%272.0%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27342%27%20x2=%27342%27%20y1=%27675.7%27%20y2=%27731.4%27/%3E%3Crect%20x=%27335%27%20y=%27697.6%27%20width=%2714%27%20height=%2714.7%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27368%27%20x2=%27368%27%20y1=%27702.6%27%20y2=%27722.4%27/%3E%3Crect%20x=%27361%27%20y=%27712.2%27%20width=%2714%27%20height=%272.1%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27394%27%20x2=%27394%27%20y1=%27693.1%27%20y2=%27732.1%27/%3E%3Crect%20x=%27387%27%20y=%27698.3%27%20width=%2714%27%20height=%2716.0%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27420%27%20x2=%27420%27%20y1=%27667.4%27%20y2=%27709.3%27/%3E%3Crect%20x=%27413%27%20y=%27686.6%27%20width=%2714%27%20height=%2711.7%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27446%27%20x2=%27446%27%20y1=%27667.4%27%20y2=%27701.9%27/%3E%3Crect%20x=%27439%27%20y=%27686.6%27%20width=%2714%27%20height=%2711.3%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27472%27%20x2=%27472%27%20y1=%27656.9%27%20y2=%27710.3%27/%3E%3Crect%20x=%27465%27%20y=%27677.2%27%20width=%2714%27%20height=%2720.6%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27498%27%20x2=%27498%27%20y1=%27666.1%27%20y2=%27693.9%27/%3E%3Crect%20x=%27491%27%20y=%27677.2%27%20width=%2714%27%20height=%2711.3%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27524%27%20x2=%27524%27%20y1=%27666.7%27%20y2=%27697.4%27/%3E%3Crect%20x=%27517%27%20y=%27684.7%27%20width=%2714%27%20height=%273.9%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27550%27%20x2=%27550%27%20y1=%27647.7%27%20y2=%27706.1%27/%3E%3Crect%20x=%27543%27%20y=%27657.6%27%20width=%2714%27%20height=%2727.1%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27576%27%20x2=%27576%27%20y1=%27651.5%27%20y2=%27666.8%27/%3E%3Crect%20x=%27569%27%20y=%27657.6%27%20width=%2714%27%20height=%272.0%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27602%27%20x2=%27602%27%20y1=%27625.9%27%20y2=%27676.7%27/%3E%3Crect%20x=%27595%27%20y=%27631.0%27%20width=%2714%27%20height=%2727.4%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27628%27%20x2=%27628%27%20y1=%27592.3%27%20y2=%27643.0%27/%3E%3Crect%20x=%27621%27%20y=%27606.4%27%20width=%2714%27%20height=%2724.6%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27654%27%20x2=%27654%27%20y1=%27564.8%27%20y2=%27612.7%27/%3E%3Crect%20x=%27647%27%20y=%27581.9%27%20width=%2714%27%20height=%2724.5%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27680%27%20x2=%27680%27%20y1=%27570.0%27%20y2=%27593.5%27/%3E%3Crect%20x=%27673%27%20y=%27576.1%27%20width=%2714%27%20height=%275.9%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27706%27%20x2=%27706%27%20y1=%27542.8%27%20y2=%27597.5%27/%3E%3Crect%20x=%27699%27%20y=%27551.6%27%20width=%2714%27%20height=%2724.4%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27732%27%20x2=%27732%27%20y1=%27542.1%27%20y2=%27571.6%27/%3E%3Crect%20x=%27725%27%20y=%27551.6%27%20width=%2714%27%20height=%272.0%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27758%27%20x2=%27758%27%20y1=%27515.1%27%20y2=%27571.0%27/%3E%3Crect%20x=%27751%27%20y=%27526.2%27%20width=%2714%27%20height=%2725.4%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27784%27%20x2=%27784%27%20y1=%27512.7%27%20y2=%27548.1%27/%3E%3Crect%20x=%27777%27%20y=%27518.5%27%20width=%2714%27%20height=%277.7%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27810%27%20x2=%27810%27%20y1=%27483.8%27%20y2=%27536.5%27/%3E%3Crect%20x=%27803%27%20y=%27492.4%27%20width=%2714%27%20height=%2726.1%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27836%27%20x2=%27836%27%20y1=%27461.4%27%20y2=%27497.7%27/%3E%3Crect%20x=%27829%27%20y=%27470.7%27%20width=%2714%27%20height=%2721.7%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27862%27%20x2=%27862%27%20y1=%27424.0%27%20y2=%27479.1%27/%3E%3Crect%20x=%27855%27%20y=%27438.5%27%20width=%2714%27%20height=%2732.2%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27888%27%20x2=%27888%27%20y1=%27416.7%27%20y2=%27450.7%27/%3E%3Crect%20x=%27881%27%20y=%27427.4%27%20width=%2714%27%20height=%2711.1%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27914%27%20x2=%27914%27%20y1=%27414.7%27%20y2=%27445.2%27/%3E%3Crect%20x=%27907%27%20y=%27427.4%27%20width=%2714%27%20height=%273.4%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27940%27%20x2=%27940%27%20y1=%27422.7%27%20y2=%27437.6%27/%3E%3Crect%20x=%27933%27%20y=%27429.9%27%20width=%2714%27%20height=%272.0%27/%3E%3C/g%3E%3Cg%20fill=%27%23ff5c5c%27%20stroke=%27%23ff5c5c%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27966%27%20x2=%27966%27%20y1=%27411.2%27%20y2=%27438.9%27/%3E%3Crect%20x=%27959%27%20y=%27429.9%27%20width=%2714%27%20height=%272.0%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%27992%27%20x2=%27992%27%20y1=%27382.9%27%20y2=%27451.3%27/%3E%3Crect%20x=%27985%27%20y=%27400.2%27%20width=%2714%27%20height=%2730.2%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%271018%27%20x2=%271018%27%20y1=%27348.8%27%20y2=%27420.1%27/%3E%3Crect%20x=%271011%27%20y=%27369.9%27%20width=%2714%27%20height=%2730.3%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%271044%27%20x2=%271044%27%20y1=%27344.6%27%20y2=%27375.8%27/%3E%3Crect%20x=%271037%27%20y=%27356.2%27%20width=%2714%27%20height=%2713.7%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%271070%27%20x2=%271070%27%20y1=%27297.1%27%20y2=%27364.5%27/%3E%3Crect%20x=%271063%27%20y=%27318.4%27%20width=%2714%27%20height=%2737.8%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%271096%27%20x2=%271096%27%20y1=%27299.5%27%20y2=%27337.2%27/%3E%3Crect%20x=%271089%27%20y=%27308.1%27%20width=%2714%27%20height=%2710.3%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%271122%27%20x2=%271122%27%20y1=%27283.5%27%20y2=%27315.2%27/%3E%3Crect%20x=%271115%27%20y=%27292.8%27%20width=%2714%27%20height=%2715.3%27/%3E%3C/g%3E%3Cg%20fill=%27%232ecc71%27%20stroke=%27%232ecc71%27%20stroke-opacity=%27.13%27%20fill-opacity=%27.13%27%3E%3Cline%20x1=%271148%27%20x2=%271148%27%20y1=%27277.1%27%20y2=%27300.9%27/%3E%3Crect%20x=%271141%27%20y=%27282.3%27%20width=%2714%27%20height=%2710.5%27/%3E%3C/g%3E%3Cpath%20d=%27M110%20860L260%20800L400%20830L560%20740L720%20690L880%20600L1060%20500%27%20fill=%27none%27%20stroke=%27url(%23ln)%27%20stroke-width=%279%27%20stroke-opacity=%27.35%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%20filter=%27url(%23bl)%27/%3E%3Cpath%20d=%27M110%20860L260%20800L400%20830L560%20740L720%20690L880%20600L1060%20500%27%20fill=%27none%27%20stroke=%27url(%23ln)%27%20stroke-width=%273%27%20stroke-opacity=%27.8%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/%3E%3Ccircle%20cx=%27110%27%20cy=%27860%27%20r=%2711%27%20fill=%27%2300e0b8%27%20fill-opacity=%27.9%27/%3E%3Ccircle%20cx=%271060%27%20cy=%27500%27%20r=%2711%27%20fill=%27%234da3ff%27%20fill-opacity=%27.9%27/%3E%3Ccircle%20cx=%271060%27%20cy=%27500%27%20r=%2726%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%27.3%27/%3E%3Ccircle%20cx=%271060%27%20cy=%27500%27%20r=%2744%27%20fill=%27none%27%20stroke=%27%234da3ff%27%20stroke-opacity=%27.15%27/%3E%3Crect%20width=%271200%27%20height=%27900%27%20fill=%27url(%23vg)%27/%3E%3C/svg%3E") center/cover no-repeat}
+.soc{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin:18px 0 4px}
+.soc span{color:var(--muted);font-size:12px}
+.soc a{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);text-decoration:none;font-size:13px;font-weight:600;transition:background .15s,border-color .15s,transform .15s}
+.soc a:hover{border-color:var(--accent);transform:translateY(-1px)}
+.soc a.sx:hover{background:#000;border-color:#fff}
+.soc a.st2:hover{background:#229ed9;border-color:#229ed9;color:#fff}
+.soc svg{width:16px;height:16px;fill:currentColor;flex:none}
+
+#tmview{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#tmview.open{display:block}
+#tmview .tmw{max-width:780px;margin:0 auto;padding:14px 16px 90px;font-size:15px;line-height:1.6}
+#tmview h1{font-size:26px;margin:6px 0 4px;display:block}
+#tmview h2{font-size:18px;margin:28px 0 8px;padding-top:6px;border-top:1px solid var(--line)}
+#tmview p,#tmview li{color:#cfd4d9}#tmview ul{padding-left:20px}#tmview li{margin:4px 0}
+#tmview .muted{color:var(--muted);font-size:13px}
+#tmview .warn{background:var(--panel);border:1px solid #f5c542;border-radius:10px;padding:12px 14px;margin:16px 0;color:var(--text)}
+#tmview .toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:16px 0}
+#tmview .toc a{display:block;padding:2px 0;text-decoration:none}
+#tmview a{color:var(--accent)}
+#tmclose{position:sticky;top:0;display:inline-block;margin:0 0 6px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:14px;cursor:pointer}
+
+#pshot{margin:10px 0}
+.hv-hd{display:flex;align-items:baseline;gap:8px;margin:12px 2px 8px}
+.hv-t{font-size:14px;font-weight:700;letter-spacing:.2px}
+.hv-s{font-size:11px;color:var(--muted)}
+.hv-card{cursor:pointer;border-radius:14px;padding:12px;background:var(--panel);border:1px solid var(--line);transition:transform .15s,box-shadow .15s;animation:hvin .35s ease both}
+.hv-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.hv-hot{display:flex;align-items:center;gap:12px;border:1px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,var(--hot,#ff9f43),#ff5c8a,var(--accent)) border-box;box-shadow:0 0 22px rgba(255,159,67,.14)}
+.hv-strip{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.hv-strip::-webkit-scrollbar{display:none}
+.hv-strip .hv-card{flex:none;width:142px;scroll-snap-align:start;position:relative;padding:12px 10px;text-align:center}
+.hv{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--line);flex:none;display:block}
+.hv-strip .hv{margin:0 auto 6px}
+.hl{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;background:linear-gradient(135deg,#7c5cff,#4da3ff)}
+.hv-sym{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hv-ch{display:inline-block;font-size:10px;padding:1px 7px;border-radius:99px;background:var(--line);color:var(--muted);margin-top:3px}
+.hv-p{font-size:12px;color:var(--muted);margin-top:4px}
+.hv-up{color:var(--up);font-weight:700}.hv-dn{color:var(--down);font-weight:700}
+.hv-pills{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.hv-pill{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--line)}
+.hv-rank{position:absolute;top:6px;left:8px;font-size:15px}
+.hv-n{position:absolute;top:8px;right:8px;font-size:10px;color:var(--muted)}
+@keyframes hvin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hv-card{animation:none;transition:none}}
+
+/* v2: new colors, bigger cards, sparklines */
+.hv-hot{gap:14px;padding:16px;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#00e0b8,#4da3ff,#9945ff) border-box;box-shadow:0 0 26px rgba(0,224,184,.16)}
+.hv-hot .hv{width:60px;height:60px}
+.hv-hot .hv-sym{font-size:18px}
+.hv-hot .hv-p{font-size:14px}
+.hv-hot .hv-pill{font-size:12px;padding:3px 10px}
+.hv-hot .hv-sp{width:130px;height:44px;flex:none}
+.hv-strip .hv-card{width:176px;padding:16px 12px 12px;border:1px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,var(--line),var(--line)) border-box}
+.hv-strip .hv-card:nth-child(1){background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#ffd700,#ff9f43) border-box}
+.hv-strip .hv-card:nth-child(2){background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#d9dee3,#8b95a1) border-box}
+.hv-strip .hv-card:nth-child(3){background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#e0925a,#a85b2b) border-box}
+.hv-strip .hv-card:hover{background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#00e0b8,#4da3ff) border-box}
+.hv-strip .hv{width:56px;height:56px;margin:4px auto 8px}
+.hv-strip .hv-sym{font-size:16px}
+.hv-strip .hv-p{font-size:13px}
+.hv-strip .hv-sp{display:block;width:100%;height:38px;margin-top:6px}
+.hv-rank{font-size:18px}
+.hv-n{font-size:11px}
+.hv-t{font-size:16px}
+
+/* v3: trending list as cards */
+#body tr .hv-sp{display:block;width:100%;max-width:150px;height:30px;margin-top:6px}
+@media(min-width:701px){#body tr .hv-sp{max-width:96px;height:24px;margin-top:4px}#body tr:hover{background:rgba(77,163,255,.06)}}
+@media(max-width:700px){
+#body tr{padding:16px 14px;margin-bottom:12px;border:1px solid transparent;border-radius:18px;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,rgba(0,224,184,.55),rgba(77,163,255,.55),rgba(153,69,255,.55)) border-box;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+#body tr:active{transform:scale(.99)}
+#body tr .sym{font-size:19px}
+#body tr .hv-sp{max-width:none;height:38px;margin-top:8px}
+#body[data-mode="trending"] tr:nth-child(1){background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#ffd700,#ff9f43) border-box;box-shadow:0 0 18px rgba(255,215,0,.15)}
+#body[data-mode="trending"] tr:nth-child(2){background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#d9dee3,#8b95a1) border-box}
+#body[data-mode="trending"] tr:nth-child(3){background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#e0925a,#a85b2b) border-box}
+}
+</style>
+<style id="psux">
+:root{--hot:#ff9f43;--glass:rgba(18,23,29,.72)}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-variant-numeric:tabular-nums;background:radial-gradient(900px 500px at 8% -8%,rgba(77,163,255,.16),transparent 60%),radial-gradient(800px 480px at 98% 4%,rgba(0,224,184,.11),transparent 60%),var(--bg);background-attachment:fixed}
+.tbl,.pulse,.rbox,.ai{background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-color:rgba(255,255,255,.07)}
+.rbox{background:rgba(8,11,15,.55)}
+.tab,.chip,.tf{transition:transform .12s,background .15s}.tab:active,.chip:active,.tf:active,.al button:active{transform:scale(.94)}
+.tab.on,.chip.on,.tf.on,.al button{background:linear-gradient(135deg,#00e0b8,#4da3ff);border-color:transparent}
+.tabs{scrollbar-width:none;scroll-snap-type:x proximity}.tabs::-webkit-scrollbar{display:none}.tab{scroll-snap-align:start}
+tbody td:first-child{box-shadow:inset 3px 0 0 var(--hc,transparent)}
+tbody tr{transition:background .15s}
+@keyframes fu{0%{background:rgba(46,204,113,.38)}100%{background:transparent}}@keyframes fd{0%{background:rgba(255,92,92,.38)}100%{background:transparent}}
+td.fu{animation:fu .9s ease-out}td.fd{animation:fd .9s ease-out}
+#detail{z-index:40;background:linear-gradient(180deg,rgba(24,31,40,.97),rgba(13,17,22,.98));border-color:rgba(255,255,255,.1);border-radius:24px 24px 0 0;max-height:90%;transition:transform .28s cubic-bezier(.2,.8,.2,1);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#grab{height:26px;margin:-10px auto 0;touch-action:none;cursor:grab;display:flex;justify-content:center;align-items:flex-start;padding-top:6px}#grab:after{content:"";width:44px;height:5px;border-radius:9px;background:rgba(255,255,255,.22)}
+#psov{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}#psov.on{opacity:1;pointer-events:auto}
+.vd{margin-top:10px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(135deg,rgba(0,224,184,.08),rgba(77,163,255,.08))}
+.vd>b{display:block;font-size:14px;margin-bottom:8px}.rings{display:flex;justify-content:space-around;gap:6px}
+.pr{text-align:center;width:30%}.pr svg{width:100%;max-width:74px;display:block;margin:0 auto}.pr span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+#psnav{display:none}#pssort{display:none}
+@media(max-width:700px){
+ .wrap{padding:10px 10px 0}h1{font-size:19px}
+ input,select{font-size:16px!important}
+ .bar input{min-height:46px;border-radius:12px}
+ .tab,.chip{padding:9px 14px;font-size:13px;border-radius:99px}
+ #pssort{display:flex;gap:8px;align-items:center;margin:0 0 8px;color:var(--muted);font-size:12px}#pssort select{flex:1;padding:10px;border-radius:12px;background:var(--panel);color:var(--text);border:1px solid var(--line)}
+ .tbl{background:none;border:0;overflow:visible;backdrop-filter:none;-webkit-backdrop-filter:none}
+ table{min-width:0;display:block}thead{display:none}tbody{display:block}
+ tbody tr{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:4px 8px;padding:12px 14px;margin-bottom:9px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:inset 4px 0 0 var(--hc,transparent)}
+ tbody tr:active{transform:scale(.985)}
+ tbody tr td{display:none;padding:0;text-align:right;position:static;background:none!important;box-shadow:none!important}
+ tbody tr td:nth-child(1){display:block;grid-column:1/3;text-align:left;font-size:15px;white-space:normal}
+ tbody tr td:nth-child(2){display:block;grid-column:3;font-weight:700;font-size:15px}
+ tbody tr td:nth-child(9){display:block;grid-column:4;font-weight:700;font-size:15px}
+ tbody tr td:nth-child(5),tbody tr td:nth-child(10),tbody tr td:nth-child(11),tbody tr td:nth-child(12){display:block;text-align:left;margin-top:6px;font-size:12px}
+ tbody tr td:nth-child(5):before,tbody tr td:nth-child(10):before,tbody tr td:nth-child(11):before,tbody tr td:nth-child(12):before{display:block;color:var(--muted);font-size:10px;margin-bottom:2px}
+ tbody tr td:nth-child(5):before{content:"Volume"}tbody tr td:nth-child(10):before{content:"Liquidity"}tbody tr td:nth-child(11):before{content:"Heat ⚡"}tbody tr td:nth-child(12):before{content:"Risk 🛡️"}
+ tbody tr td[colspan]{display:block;grid-column:1/-1;text-align:center}
+ tbody tr td:nth-child(13):not(.q){display:block;grid-column:1/-1;text-align:left;margin-top:6px}
+ tbody tr td:nth-child(13) [data-ca]{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--text);font-size:12.5px}
+ tbody tr td:nth-child(13) [data-ca]:before{content:"CA";color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.08em}
+ tbody tr td:nth-child(13) [data-ca]:after{content:"\29C9";color:var(--accent);font-size:13px}
+ .star{font-size:20px;margin-right:8px;padding:4px}
+ #detail{max-width:none;padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px))}
+ .tf{padding:8px 13px}.al select,.al input,.al button{padding:12px 10px;border-radius:12px}
+ .x{font-size:32px;padding:0 6px}
+ #psnav{display:flex;position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:30;justify-content:space-around;padding:6px;border-radius:22px;background:rgba(14,19,25,.82);-webkit-backdrop-filter:blur(20px) saturate(1.5);backdrop-filter:blur(20px) saturate(1.5);border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.55)}
+ #psnav button{flex:1;min-width:0;background:none;border:0;color:var(--muted);font-size:10px;padding:6px 0;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}#psnav button i{font-style:normal;font-size:20px}
+ #psnav button.on{color:var(--text);background:rgba(77,163,255,.18)}
+ .note{margin-bottom:110px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<link rel="manifest" id="mf">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PairScope">
+<style id="psux2">
+html{overscroll-behavior-y:contain}
+.spk{display:none}
+#psptr{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translate(-50%,-80px);z-index:60;padding:9px 16px;border-radius:99px;background:rgba(14,19,25,.94);border:1px solid rgba(255,255,255,.14);font-size:12.5px;font-weight:600;transition:transform .22s;pointer-events:none;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);max-width:92vw;text-align:center}
+#psptr.on{transform:translate(-50%,0)}
+#psinst{display:none;margin-left:6px}
+@media(max-width:700px){
+ tbody tr{touch-action:pan-y;transition:transform .18s,opacity .18s}
+ .spk{display:block;grid-column:1/-1;margin-top:8px}.spk svg{width:100%;height:34px;display:block}
+ .spkl{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin-top:2px;letter-spacing:.03em}
+}
+</style>
+<style id="psux3">
+html[data-theme=light]{--bg:#f4f6f8;--panel:#fff;--text:#14181d;--muted:#5b6672;--line:#dde3ea;--accent:#1f7ae0;color-scheme:light}
+html[data-theme=light] .tab.on,html[data-theme=light] .chip.on{color:#fff}
+#px3{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}#px3 .chip{font-size:12px}
+#pxp{display:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin:0 0 10px;gap:8px 12px;flex-wrap:wrap;align-items:center}
+#pxp.on{display:flex}#pxp label,#pxp .q{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+#pxp input[type=number]{flex:none;min-width:0;width:74px;padding:5px 7px;font-size:13px}#pxp input[type=checkbox]{flex:none;min-width:0;width:auto}
+#pxp select,#pxp button{padding:5px 9px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:12px}
+#pxm{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:14px}#pxm.on{display:flex}
+#pxm>div{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:760px;width:100%;max-height:85vh;overflow:auto;padding:14px}
+#pxm table{min-width:0;width:100%}#pxm th,#pxm td{padding:6px 8px;cursor:default}#pxm td:first-child,#pxm th:first-child{position:static}
+#pxt{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom,0px));left:50%;transform:translate(-50%,30px);opacity:0;z-index:80;background:var(--panel);border:1px solid var(--accent);border-radius:99px;padding:9px 16px;font-size:12.5px;font-weight:600;transition:.2s;pointer-events:none;max-width:92vw;text-align:center}#pxt.on{transform:translate(-50%,0);opacity:1}
+#pxbar{display:flex;gap:6px;flex-wrap:wrap;padding:6px 12px 0}#pxbar .chip{font-size:12px}
+tr.kb{outline:2px solid var(--accent);outline-offset:-2px}
+.up{color:var(--up)}.dn{color:var(--down)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(pointer:coarse){.chip,.tab,#pxp button,#pxp select{min-height:40px}.star{padding:8px 8px 8px 0}}
+</style>
+<style id="psux4">
+.tk{position:relative;display:inline-block;width:26px;height:26px;margin-right:8px;vertical-align:middle;flex:none}
+.tk img,.tk b{width:26px;height:26px;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--line);color:#fff;font:700 12px system-ui,sans-serif}
+.tk i{position:absolute;right:-6px;bottom:-5px;font-size:11px;font-style:normal;line-height:1;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}
+#pxbar .tk{width:30px;height:30px;margin:0 6px 0 0}#pxbar .tk img,#pxbar .tk b{width:30px;height:30px}
+#pxbar .pl{align-self:center;font-size:12px;color:var(--muted)}
+@media(max-width:700px){.tk,.tk img,.tk b{width:30px;height:30px}}
+</style>
+<style id="psup">
+.sr{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+.sr.skip:focus{left:8px;top:8px;width:auto;height:auto;padding:8px 12px;background:var(--accent);color:#04101f;border-radius:8px;z-index:200;font-weight:600}
+.hero{margin:0 0 12px;border:1px solid rgba(0,224,184,.4);background:linear-gradient(135deg,rgba(0,224,184,.10),rgba(77,163,255,.10))}
+.hero b{font-size:15px}.hero .al{margin-top:8px}.hero .al input{min-height:42px}.hero .al button{min-height:42px;padding:0 18px}
+th[tabindex]:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+.psp{margin:0 0 12px;border:1px solid rgba(255,159,67,.45);background:linear-gradient(135deg,rgba(255,159,67,.12),rgba(77,163,255,.10))}
+.psp .ph{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.psp .ph b{font-size:15px;display:flex;align-items:center;gap:8px}
+.psp .pl{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none}
+.psp .pt{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(255,159,67,.18);color:var(--hot,#ff9f43);border:1px solid rgba(255,159,67,.4)}
+.psp p{margin:8px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.psp .pca{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;border:1px dashed var(--line);background:var(--panel)}
+.psp .pca code{flex:1;min-width:0;font:12px ui-monospace,Menlo,Consolas,monospace;word-break:break-all;color:var(--text)}
+.psp .pca span{font-size:10.5px;color:var(--muted);flex:none}
+.psp .pb{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.psp .pb a,.psp .pb button{display:inline-block;padding:8px 13px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:12px;text-decoration:none;cursor:pointer}
+.psp .pb a.pp{background:var(--accent);border-color:var(--accent);color:#04101f;font-weight:600}
+.psp .pb[hidden]{display:none}
+.psp .psh{align-items:center}.psp .psh .shl{font-size:10.5px;color:var(--muted);flex:none}
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">PairScope needs JavaScript to load live DEX data.</p></noscript>
+<a class="sr skip" href="#body">Skip to results</a>
+<div class="wrap">
+  <h1><img id="logo" alt="PairScope logo" width="36" height="36"> PairScope</h1>
+  <div class="rbox hero" id="hero" role="search" aria-label="Token contract checker"><b>🛡️ Is this token safe? Paste any contract address</b>
+    <div class="al" style="flex-wrap:wrap"><input id="hca" aria-label="Token contract address" placeholder="Paste token contract (EVM or Solana)…" autocomplete="off" spellcheck="false"><button id="hgo" type="button">Scan free</button></div>
+    <small>Market Risk Radar plus a GoPlus contract scan in seconds. Not financial advice.</small></div>
+  <div class="rbox psp" id="psp" aria-label="PSP token">
+    <div class="ph"><b><img class="pl" src="data:image/png;base64,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" alt="PSP logo" width="32" height="32"> $PSP, the PairScope coin</b><span class="pt" id="psptag">COMING SOON</span></div>
+    <p>$PSP is the community coin of PairScope.online. Hold it, share it and help us keep the scanner free and growing.</p>
+    <div class="pca"><span>CA</span><code id="pspca">Contract address will be announced soon</code></div>
+    <div class="pb" id="pspbtns" hidden>
+      <button type="button" id="pspcopy">Copy CA</button>
+      <a class="pp" id="pspbuy" target="_blank" rel="noopener">Buy</a>
+      <a id="psppump" target="_blank" rel="noopener">pump.fun</a>
+      <a id="pspdex" target="_blank" rel="noopener">Chart</a>
+      <a id="pspscan" target="_blank" rel="noopener">Explorer</a>
+    </div>
+    <div class="pb psh" id="pspshare" hidden>
+      <span class="shl">Share $PSP</span>
+      <a id="pspx" target="_blank" rel="noopener" aria-label="Share $PSP on X">𝕏 Post</a>
+      <a id="psptg" target="_blank" rel="noopener" aria-label="Share $PSP on Telegram">Telegram</a>
+      <a id="pspwa" target="_blank" rel="noopener" aria-label="Share $PSP on WhatsApp">WhatsApp</a>
+      <button type="button" id="pspsharebtn">🔗 Share / Copy link</button>
+    </div>
+    <small>$PSP is a community token, not an investment. Always check the contract address matches this card and the official PairScope Telegram. Not financial advice. <a href="#terms" data-terms="1" style="color:var(--accent)">Terms &amp; Disclaimer</a></small>
+  </div>
+  <div class="bar">
+    <input id="q" aria-label="Search tokens" placeholder="Search token, e.g. pepe, bonk, sol…" autocomplete="off">
+    <span class="live" id="live"><span class="dot"></span>Live · refreshing every 15s</span>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="pulse"></div>
+  <div class="chips" id="chips"></div>
+  <div id="mp" style="display:none"><div id="mpout"></div></div>
+  <div id="pk" style="display:none"><div id="pkout"></div></div>
+  <div id="feat" style="display:none">
+    <div class="rbox" style="margin-top:0"><b>⭐ Featured listings</b>
+      <small>Paid placements (see <a href="#terms" data-terms="1" style="color:var(--accent)">Terms</a>). Every listing still shows its own Risk and contract scores. A listing is not an endorsement or financial advice, and PairScope declines tokens that fail the contract scan.</small>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><button type="button" class="tf" id="lst">List your token</button></div>
+      <div id="lstbox" style="display:none;margin-top:10px">
+        <div class="q" id="fpinfo">Loading plans…</div>
+        <div class="al" style="flex-wrap:wrap;margin-top:8px">
+          <select id="fpchain" aria-label="Network" style="flex:1"></select>
+          <input id="fpaddr" aria-label="Token contract address to list" placeholder="Token contract address" autocomplete="off" spellcheck="false">
+          <select id="fpplan" aria-label="Listing plan" style="flex:1"></select>
+        </div>
+        <div class="al" style="flex-wrap:wrap">
+          <button type="button" class="tf" id="fpconn">Connect Phantom</button>
+          <button type="button" class="tf" id="fppay">Pay &amp; feature</button>
+        </div>
+        <div class="q" id="fpmsg" style="margin-top:8px"></div>
+        <small>Payment is in SOL via Phantom, sent straight to PairScope. Your listing goes live automatically after the payment confirms and is announced on our Telegram group and X. Tokens that fail the contract scan are declined before you pay. Trouble? Message us on <a href="https://t.me/pairscopepsp" target="_blank" rel="noopener">Telegram</a> or <a href="https://x.com/PairScopescreen" target="_blank" rel="noopener">X</a> with your transaction signature.</small>
+      </div>
+    </div>
+  </div>
+  <div id="checker" style="display:none">
+    <div class="rbox" style="margin-top:0"><b>🛡️ PairScope Checker</b>
+      <div class="al" style="flex-wrap:wrap"><input id="cka" aria-label="Token contract address" placeholder="Paste token contract address" autocomplete="off" spellcheck="false"><select id="ckc" aria-label="Network" style="flex:1"></select><button id="ckgo">Scan</button></div>
+      <small>Runs the market Risk Radar and a GoPlus contract scan on any token. Pick the network if the token has no trading pair yet.</small></div>
+    <div id="ckout"></div>
+  </div>
+  <div class="tbl"><table>
+    <caption class="sr">Live DEX pairs with price, volume, Heat, Risk and Contract scores</caption>
+    <thead><tr>
+      <th data-k="s">Pair</th><th data-k="p">Price</th><th data-k="age">Age</th><th data-k="tx">Txns</th><th data-k="v">Volume</th>
+      <th data-k="m5">5m</th><th data-k="h1">1h</th><th data-k="h6">6h</th><th data-k="h24">24h</th><th data-k="l">Liquidity</th><th data-k="ht" title="Heat: volume surge + price momentum + buy pressure">Heat ⚡</th><th data-k="rs" title="Risk Radar score: higher means lower risk">Risk 🛡️</th>
+    <th data-k="cs" title="GoPlus contract scan: higher means lower detected risk">Contract 🧪</th></tr></thead>
+    <tbody id="body"></tbody>
+  </table></div>
+  <div id="alerts"></div>
+  <div class="soc">
+    <span>Follow PairScope</span>
+    <a class="sx" href="https://x.com/PairScopescreen" target="_blank" rel="noopener" aria-label="PairScope on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>X</a>
+    <a class="st2" href="https://t.me/pairscopepsp" target="_blank" rel="noopener" aria-label="PairScope on Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>Telegram</a>
+  </div>
+  <div class="note">Live data from the DexScreener API. Trending uses the most boosted tokens. New Pairs shows the latest listed tokens, newest first. Surges shows pairs with a volume surge of 2x or more that pass the market risk checks and score 80+ on a GoPlus contract scan. Chains GoPlus does not cover are left out, and a pass is not a guarantee. Featured shows paid listings, which are not endorsements. Not financial advice. <a href="#terms" data-terms="1" style="color:var(--accent)">Terms &amp; Disclaimer</a></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="detail" role="dialog" aria-modal="true" aria-label="Token details"></div>
+<script>
+var B="https://api.dexscreener.com";
+var W=[];try{W=JSON.parse(localStorage.getItem("ps_watch")||"[]")}catch(e){}
+function saveW(){try{localStorage.setItem("ps_watch",JSON.stringify(W))}catch(e){}}
+function key(r){return r.c+"|"+r.addr}
+var A=[];try{A=JSON.parse(localStorage.getItem("ps_alerts")||"[]")}catch(e){}
+function saveA(){try{localStorage.setItem("ps_alerts",JSON.stringify(A))}catch(e){}syncAlerts()}
+var onlyRk=false,D=[],mode="trending",term="",chain="all",minLiq=false,sortK="v",dir=-1,timer,loading=false,reqId=0;
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function safeUrl(u,c,p){return/^https:\/\/dexscreener\.com\//.test(u||"")?u:"https://dexscreener.com/"+encodeURIComponent(c||"")+"/"+encodeURIComponent(p||"")}
+function fm(n){n=+n||0;if(n>=1e9)return"$"+(n/1e9).toFixed(2)+"B";if(n>=1e6)return"$"+(n/1e6).toFixed(2)+"M";if(n>=1e3)return"$"+(n/1e3).toFixed(1)+"K";return"$"+Math.round(n)}
+function fprice(n){if(n>=1)return"$"+n.toFixed(n>=100?1:2);if(n>=0.01)return"$"+n.toFixed(4);return"$"+n.toPrecision(3)}
+function fage(t){if(!t)return"-";var m=(Date.now()-t)/6e4;if(m<60)return Math.max(1,Math.round(m))+"m";if(m<1440)return Math.round(m/60)+"h";if(m<43200)return Math.round(m/1440)+"d";return Math.round(m/43200)+"mo"}
+function pc(v){v=+v||0;return'<td class="'+(v>=0?"up":"down")+'">'+(v>=0?"+":"")+v.toFixed(2)+'%</td>'}
+function map(x){var pcg=x.priceChange||{},tx=(x.txns&&x.txns.h24)||{};
+  var o={s:x.baseToken.symbol,q:x.quoteToken.symbol,c:x.chainId,dex:x.dexId,p:+x.priceUsd||0,m5:pcg.m5||0,h1:pcg.h1||0,h6:pcg.h6||0,h24:pcg.h24||0,
+  v:(x.volume&&x.volume.h24)||0,l:(x.liquidity&&x.liquidity.usd)||0,f:x.fdv||0,t:x.pairCreatedAt||0,age:x.pairCreatedAt?Date.now()-x.pairCreatedAt:1e15,
+  tx:(tx.buys||0)+(tx.sells||0),b:tx.buys||0,sl:tx.sells||0,v5:(x.volume&&x.volume.m5)||0,v6:(x.volume&&x.volume.h6)||0,b5:(x.txns&&x.txns.m5&&x.txns.m5.buys)||0,s5:(x.txns&&x.txns.m5&&x.txns.m5.sells)||0,b6:(x.txns&&x.txns.h6&&x.txns.h6.buys)||0,s6:(x.txns&&x.txns.h6&&x.txns.h6.sells)||0,v1:(x.volume&&x.volume.h1)||0,b1:(x.txns&&x.txns.h1&&x.txns.h1.buys)||0,s1:(x.txns&&x.txns.h1&&x.txns.h1.sells)||0,url:safeUrl(x.url,x.chainId,x.pairAddress),addr:x.baseToken.address,pair:x.pairAddress,img:(x.info&&x.info.imageUrl)||""};o.rs=riskCalc(o).s;heatCalc(o);return o}
+function hc(s){return s>=60?"rk-h":s>=30?"rk-y":"rk-m"}
+function heatCalc(o){
+  var hrs=o.t?Math.min(24,Math.max(1,(Date.now()-o.t)/36e5)):24,avg=o.v/hrs;
+  o.sg=avg>0?o.v1/avg:0;o.sg5=avg>0?o.v5*12/avg:0;
+  var t1=o.b1+o.s1;o.bp=t1>0?o.b1/t1:0.5;
+  var a=Math.max(0,Math.min(50,(o.sg-1)*10)),b=Math.max(0,Math.min(20,o.h1)),c=Math.max(0,Math.min(30,(o.bp-0.5)*60)),ht=a+b+c;
+  if(t1<10)ht*=0.5;
+  o.ht=Math.round(ht);
+}
+function momHTML(r){
+  var bp=Math.round(r.bp*100),v;
+  if(r.ht>=60&&r.rs>=50)v="Strong momentum and it passes basic risk checks. It can still reverse quickly.";
+  else if(r.ht>=60)v="Hot but risky: strong momentum with weak safety signals. Pumps like this often reverse.";
+  else if(r.ht>=30)v="Moderate activity right now.";
+  else v="Quiet right now.";
+  return'<div class="rbox"><div style="display:flex;justify-content:space-between;align-items:center"><b>⚡ Momentum</b><span class="rk '+hc(r.ht)+'">Heat '+r.ht+'</span></div><ul>'+
+  '<li class="good">Volume pace: <b>'+r.sg5.toFixed(1)+'x</b> (5m) · <b>'+r.sg.toFixed(1)+'x</b> (1h) vs the 24h average</li>'+
+  '<li class="good">Buy pressure (1h): '+bp+'% buys ('+r.b1+' buys / '+r.s1+' sells)</li></ul>'+
+  '<div style="height:6px;border-radius:4px;background:var(--down);margin-top:6px;overflow:hidden"><div style="width:'+bp+'%;height:100%;background:var(--up)"></div></div><small>'+v+'</small></div>';
+}
+function pulse(){
+  if(mode==="surge"&&SS){$("pulse").innerHTML='<div class="pulse"><span>Screened '+SS.n+' pairs</span><span>⚡ '+SS.c+' passed volume and market checks</span><span>🧪 '+SS.sc+' of '+SS.c+' scanned</span><span><b>'+SS.ok+'</b> passed (80+)</span></div>';return}
+  if(!D.length){$("pulse").innerHTML="";return}
+  var up=D.filter(function(r){return r.h24>0}).length,pct=Math.round(up/D.length*100),
+  avg=D.reduce(function(s,r){return s+r.h1},0)/D.length,
+  hot=D.filter(function(r){return r.sg>=2&&r.rs>=50}).length,
+  mood=pct>=60?["Bullish","up"]:pct>=40?["Neutral",""]:["Bearish","down"];
+  $("pulse").innerHTML='<div class="pulse"><span>Pulse (this list): <b class="'+mood[1]+'">'+mood[0]+'</b></span><span>'+pct+'% of pairs up (24h)</span><span>Avg 1h '+(avg>=0?"+":"")+avg.toFixed(1)+'%</span><span>⚡ '+hot+' surging</span></div>';
+}
+function rl(s){return s>=75?["Lower risk","g"]:s>=50?["Caution","y"]:["High risk","r"]}
+function riskCalc(o){
+  var s=100,n=[];
+  function bad(p,t){s-=p;n.push({b:1,t:t})}
+  function ok(t){n.push({b:0,t:t})}
+  if(!o.t)bad(8,"Pair age unknown");
+  else{var hrs=(Date.now()-o.t)/36e5;
+    if(hrs<1)bad(25,"Launched under 1 hour ago");
+    else if(hrs<24)bad(15,"Less than 24 hours old");
+    else if(hrs<168)bad(6,"Less than a week old");
+    else ok("Trading for "+fage(o.t))}
+  if(o.l<5000)bad(35,"Very low liquidity ("+fm(o.l)+"): easy to manipulate");
+  else if(o.l<20000)bad(25,"Low liquidity ("+fm(o.l)+")");
+  else if(o.l<50000)bad(12,"Below-average liquidity ("+fm(o.l)+")");
+  else if(o.l<100000)bad(5,"Moderate liquidity ("+fm(o.l)+")");
+  else ok("Healthy liquidity ("+fm(o.l)+")");
+  if(o.f>0){var lf=o.l/o.f;
+    if(lf<0.01)bad(12,"Liquidity is under 1% of valuation: a modest sell could crash the price");
+    else if(lf<0.03)bad(6,"Liquidity is thin compared to valuation");
+    else ok("Liquidity is reasonable versus valuation")}
+  if(o.l>0&&o.v/o.l>20)bad(10,"Volume is "+Math.round(o.v/o.l)+"x liquidity: possible hype or wash trading");
+  if(o.sl===0&&o.b>=30)bad(20,"Many buys but zero sells: possible honeypot (can't sell)");
+  else if(o.tx>=50&&o.sl>o.b*1.5)bad(10,"Sellers heavily outnumber buyers");
+  else if(o.tx>=50)ok("Buys and sells look balanced");
+  if(o.tx<50)bad(10,"Very few trades (under 50 in 24h)");
+  if(Math.abs(o.h24)>200)bad(12,"Price moved over 200% in 24h");
+  else if(Math.abs(o.h1)>50)bad(8,"Price moved over 50% in the last hour");
+  return{s:Math.max(0,Math.min(100,s)),n:n};
+}
+function riskHTML(r){
+  var c=riskCalc(r),l=rl(c.s);
+  c.n.sort(function(a,b){return b.b-a.b});
+  return'<div class="rbox"><div style="display:flex;justify-content:space-between;align-items:center"><b>🛡️ Risk Radar</b><span class="rk rk-'+l[1]+'">'+c.s+' · '+l[0]+'</span></div><ul>'+
+  c.n.map(function(x){return'<li class="'+(x.b?"bad":"good")+'">'+(x.b?"⚠️ ":"✓ ")+x.t+'</li>'}).join("")+
+  '</ul><small>Estimate from market data only. It cannot read contract code (hidden mint, taxes, ownership), so it can miss scams. Not a guarantee. Always do your own research.</small></div>';
+}
+function dedupe(list){var best={};list.forEach(function(r){if(!(r.p>0))return;var k=r.c+r.addr;if(!best[k]||r.l>best[k].l)best[k]=r});return Object.keys(best).map(function(k){return best[k]})}
+function getTrending(){
+  return fetch(B+"/token-boosts/top/v1").then(function(r){return r.json()}).then(function(list){
+    var by={};list.slice(0,60).forEach(function(t){(by[t.chainId]=by[t.chainId]||[]).push(t.tokenAddress)});
+    return Promise.all(Object.keys(by).map(function(c){return fetch(B+"/tokens/v1/"+c+"/"+by[c].slice(0,30).join(",")).then(function(r){return r.json()}).catch(function(){return[]})}));
+  }).then(function(arrs){return dedupe([].concat.apply([],arrs).map(map))});
+}
+function getNew(){
+  return fetch(B+"/token-profiles/latest/v1").then(function(r){return r.json()}).then(function(list){
+    var by={};list.slice(0,60).forEach(function(t){(by[t.chainId]=by[t.chainId]||[]).push(t.tokenAddress)});
+    return Promise.all(Object.keys(by).map(function(c){return fetch(B+"/tokens/v1/"+c+"/"+by[c].slice(0,30).join(",")).then(function(r){return r.json()}).catch(function(){return[]})}));
+  }).then(function(arrs){return dedupe([].concat.apply([],arrs).map(map))});
+}
+function getSurge(){
+  return Promise.all([getTrending(),getNew()]).then(function(a){
+    var seen={},all=a[0].concat(a[1]).filter(function(r){var k=key(r);if(seen[k])return false;seen[k]=1;return true});
+    var c=all.filter(function(r){return r.sg>=2&&r.rs>=50&&r.h1>0});
+    return gpBatch(c).then(function(){var ok=c.filter(function(r){return r.cs>=80});SS={n:all.length,c:c.length,sc:c.filter(function(r){return r.cs!==undefined}).length,ok:ok.length};recordPicks(ok);return ok});
+  });
+}
+function getWatch(){
+  var by={};W.forEach(function(k){var p=k.split("|");(by[p[0]]=by[p[0]]||[]).push(p[1])});
+  var cs=Object.keys(by);if(!cs.length)return Promise.resolve([]);
+  return Promise.all(cs.map(function(c){return fetch(B+"/tokens/v1/"+c+"/"+by[c].slice(0,30).join(",")).then(function(r){return r.json()}).catch(function(){return[]})})).then(function(arrs){return dedupe([].concat.apply([],arrs).map(map))});
+}
+function getSearch(q){return fetch(B+"/latest/dex/search?q="+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(d){return dedupe((d.pairs||[]).map(map)).slice(0,60)})}
+function load(silent){
+  if(mode==="check"||mode==="picks"||mode==="map")return;if(silent&&loading)return;var id=++reqId;loading=true;
+  if(!silent)$("body").innerHTML='<tr><td colspan="13" class="q" style="text-align:center;padding:24px">Loading…</td></tr>';
+  (mode==="trending"?getTrending():mode==="new"?getNew():mode==="surge"?getSurge():mode==="featured"?getFeatured():mode==="watch"?getWatch():(mode==="gainers"||mode==="losers")?Promise.all([getTrending(),getNew()]).then(function(a){return dedupe(a[0].concat(a[1]))}):getSearch(term)).then(function(rows){if(id!==reqId)return;if(mode==="gainers")rows=rows.filter(function(r){return r.h24>0}).sort(function(a,b){return b.h24-a.h24}).slice(0,60);if(mode==="losers")rows=rows.filter(function(r){return r.h24<0}).sort(function(a,b){return a.h24-b.h24}).slice(0,60);D=rows;if(!silent)chain="all";chips();render();pulse();$("live").innerHTML='<span class="dot"></span>Live · updated '+new Date().toLocaleTimeString()})
+  .catch(function(){if(id!==reqId)return;if(!silent)$("body").innerHTML='<tr><td colspan="13" class="q" style="text-align:center;padding:24px">Could not load data. Check your connection.</td></tr>'})
+  .then(function(){if(id===reqId)loading=false});
+}
+function render(){D.forEach(function(r){var c=csKnown(r);if(c)r.cs=c.s});
+  var rows=D.filter(function(r){return(chain==="all"||r.c===chain)&&(!minLiq||r.l>=10000)&&(!onlyRk||r.rs>=75)});
+  rows.sort(function(a,b){var x=a[sortK],y=b[sortK];return(x>y?1:x<y?-1:0)*dir});VIS=rows;setTimeout(scanVisible,0);
+  $("body").innerHTML=rows.map(function(r,n){
+    return'<tr data-i="'+D.indexOf(r)+'"><td><span class="star'+(W.indexOf(key(r))>-1?' on':'')+'" data-w="'+esc(key(r))+'">'+(W.indexOf(key(r))>-1?'★':'☆')+'</span><span class="sym">'+esc(r.s)+'</span><span class="q"> /'+esc(r.q)+' · '+esc(r.c)+(r.sp?' <span class="rk rk-y" style="min-width:0;font-size:9px;padding:1px 6px">Sponsored</span>':'')+'</span></td>'+
+    '<td>'+fprice(r.p)+'</td><td>'+fage(r.t)+'</td><td>'+r.tx.toLocaleString()+'</td><td>'+fm(r.v)+'</td>'+pc(r.m5)+pc(r.h1)+pc(r.h6)+pc(r.h24)+'<td>'+fm(r.l)+'</td><td><span class="rk '+hc(r.ht)+'">'+r.ht+'</span> <span class="q">'+r.sg.toFixed(1)+'x</span></td><td><span class="rk rk-'+rl(r.rs)[1]+'">'+r.rs+'</span></td>'+caCell(r)+'</tr>'}).join("")||'<tr><td colspan="13" class="q" style="text-align:center;padding:24px">'+(mode==="watch"?"Your watchlist is empty. Tap ☆ on any pair to save it.":mode==="surge"?"No surges passing market and contract checks right now. Check back in a minute.":mode==="featured"?"No featured listings yet. Tap List your token above to be first.":mode==="gainers"?"No positive 24h movers found in this feed.":mode==="losers"?"No negative 24h movers found in this feed.":"No pairs found")+'</td></tr>';
+  Array.prototype.forEach.call(document.querySelectorAll("th"),function(t){t.className=t.getAttribute("data-k")===sortK?"on":""});
+}
+function tabs(){$("tabs").innerHTML=[["trending","🔥 Trending"],["gainers","📈 Top Gainers"],["losers","📉 Top Losers"],["new","🆕 New Pairs"],["surge","⚡ Surges"],["featured","⭐ Featured"],["picks","📈 Picks"],["map","🧭 Map"],["check","🛡️ Checker"],["search","🔎 Search"],["watch","⭐ Watchlist ("+W.length+")"]].map(function(t){return'<button class="tab'+(mode===t[0]?" on":"")+'" data-m="'+t[0]+'">'+t[1]+'</button>'}).join("");var ck=mode==="check"||mode==="picks"||mode==="map";$("checker").style.display=mode==="check"?"block":"none";$("pk").style.display=mode==="picks"?"block":"none";$("mp").style.display=mode==="map"?"block":"none";["pulse","chips"].forEach(function(i){$(i).style.display=ck?"none":""});document.querySelector(".tbl").style.display=ck?"none":"";$("feat").style.display=mode==="featured"?"block":"none"}
+function chips(){
+  var cs=["all"].concat(D.map(function(r){return r.c}).filter(function(c,i,a){return a.indexOf(c)===i}));
+  $("chips").innerHTML=cs.map(function(c){return'<button class="chip'+(c===chain?" on":"")+'" data-c="'+esc(c)+'">'+esc(c)+'</button>'}).join("")+'<button class="chip'+(minLiq?" on":"")+'" data-liq="1">Liq ≥ $10K</button><button class="chip'+(onlyRk?" on":"")+'" data-rk="1">🛡️ Lower risk only</button>';
+}
+var cur=null;
+var GN={ethereum:"eth",bsc:"bsc",solana:"solana",base:"base",arbitrum:"arbitrum",polygon:"polygon_pos",avalanche:"avax",optimism:"optimism",pulsechain:"pulsechain",sui:"sui-network",ton:"ton",cronos:"cro",fantom:"ftm",linea:"linea",blast:"blast",zksync:"zksync",scroll:"scroll"};
+var TF=[["5m","minute",5],["15m","minute",15],["1h","hour",1],["4h","hour",4],["1d","day",1]];
+function candles(l){
+  var W=320,H=170,pr=52,n=l.length,cw=(W-pr)/n,hi=-1e99,lo=1e99,vm=0,i,s="";
+  for(i=0;i<n;i++){hi=Math.max(hi,l[i][2]);lo=Math.min(lo,l[i][3]);vm=Math.max(vm,l[i][5])}
+  function y(p){return 6+(hi-p)/((hi-lo)||1)*(H-48)}
+  for(i=0;i<n;i++){var c=l[i],x=i*cw+cw/2,up=c[4]>=c[1],col=up?"var(--up)":"var(--down)",t=y(Math.max(c[1],c[4])),b=y(Math.min(c[1],c[4]));
+    s+='<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+y(c[2]).toFixed(1)+'" y2="'+y(c[3]).toFixed(1)+'" stroke="'+col+'" stroke-width="1"/>'+
+    '<rect x="'+(x-cw*0.35).toFixed(1)+'" y="'+t.toFixed(1)+'" width="'+(cw*0.7).toFixed(1)+'" height="'+Math.max(1,b-t).toFixed(1)+'" fill="'+col+'"/>'+
+    '<rect x="'+(x-cw*0.35).toFixed(1)+'" y="'+(H-(c[5]/(vm||1))*30).toFixed(1)+'" width="'+(cw*0.7).toFixed(1)+'" height="'+((c[5]/(vm||1))*30).toFixed(1)+'" fill="'+col+'" opacity=".35"/>';}
+  s+='<text x="'+(W-pr+4)+'" y="12" fill="var(--muted)" font-size="9">'+fprice(hi)+'</text><text x="'+(W-pr+4)+'" y="'+(H-36)+'" fill="var(--muted)" font-size="9">'+fprice(lo)+'</text>';
+  return'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+s+'</svg>';
+}
+function drawTF(r,t){
+  cur=r;var tf=TF.filter(function(x){return x[0]===t})[0]||TF[1],el=$("ch");
+  $("tfs").innerHTML=TF.map(function(x){return'<button class="tf'+(x[0]===tf[0]?" on":"")+'" data-tf="'+x[0]+'">'+x[0]+'</button>'}).join("");
+  el.innerHTML='<div class="q" style="padding:60px 0;text-align:center">Loading chart…</div>';
+  fetch("https://api.geckoterminal.com/api/v2/networks/"+(GN[r.c]||r.c)+"/pools/"+r.pair+"/ohlcv/"+tf[1]+"?aggregate="+tf[2]+"&limit=80")
+  .then(function(x){return x.json()}).then(function(d){
+    var l=d.data.attributes.ohlcv_list;if(!l||!l.length)throw 0;if(cur!==r)return;el.innerHTML=candles(l.slice().reverse());
+  }).catch(function(){if(cur===r)el.innerHTML='<div class="q" style="padding:60px 0;text-align:center">Chart unavailable for this pair. Use the link below.</div>'});
+}
+var GP_CHAIN={ethereum:"1",bsc:"56",base:"8453",arbitrum:"42161",polygon:"137",avalanche:"43114",optimism:"10",fantom:"250",cronos:"25",linea:"59144",blast:"81457",zksync:"324",scroll:"534352",mantle:"5000",pulsechain:"369"};
+var TS_CHAIN={ethereum:1,bsc:56,base:8453,arbitrum:42161,polygon:137,avalanche:43114,optimism:10,fantom:250,cronos:25,linea:59144,blast:81457,zksync:324,scroll:534352,mantle:5000};
+function flag(v){return v===1||v==="1"||v===true||v==="true"}
+function present(v){return v!==undefined&&v!==null&&v!==""&&v!=="0x0000000000000000000000000000000000000000"&&v!=="11111111111111111111111111111111"}
+function holderChecks(t,bad,note){
+  var burn=/^0x0+(dead)?$/i,pct=function(v){v=parseFloat(v);return Number.isFinite(v)?v:null};
+  var hs=Array.isArray(t.holders)?t.holders:[];
+  if(hs.length){
+    var top=0,max=0;
+    hs.forEach(function(h){if(flag(h.is_contract)||burn.test(h.address||""))return;var p=pct(h.percent)||0;top+=p;if(p>max)max=p});
+    var T=Math.round(top*100),m="Top holders (excluding contracts) own "+T+"% of supply, largest "+(max*100).toFixed(1)+"%";
+    if(top>=0.7)bad(25,m);else if(top>=0.5)bad(15,m);else if(top>=0.3)bad(8,m);else note(m);
+  }
+  var cp=pct(t.creator_percent);
+  if(cp!==null&&cp>=0.2)bad(10,"Creator wallet still holds "+Math.round(cp*100)+"% of supply");
+  var lp=Array.isArray(t.lp_holders)?t.lp_holders:[];
+  if(lp.length){
+    var L=0;lp.forEach(function(h){if(flag(h.is_locked)||burn.test(h.address||""))L+=pct(h.percent)||0});
+    L=Math.min(1,L);var LT=Math.round(L*100);
+    if(L<0.2)bad(20,"Only "+LT+"% of liquidity is locked or burned");
+    else if(L<0.5)bad(10,"Only "+LT+"% of liquidity is locked or burned");
+    else note(LT+"% of liquidity is locked or burned");
+  }
+}
+function gpScore(token,isSol){
+    var score=100,findings=[];
+    function bad(points,label){score-=points;findings.push({bad:true,label:label})}
+    function note(label){findings.push({bad:false,label:label})}
+    if(isSol){
+      var mint=token.mint_authority||token.mintAuthority,freeze=token.freeze_authority||token.freezeAuthority;
+      if(present(mint))bad(25,"Mint authority appears to remain enabled");else note("No active mint authority reported");
+      if(present(freeze))bad(20,"Freeze authority appears to remain enabled");else note("No active freeze authority reported");
+      if(flag(token.metadata_mutable)||flag(token.is_mutable)||flag(token.metadataMutable))bad(8,"Token metadata is mutable");
+      if(flag(token.transfer_fee_enable)||flag(token.transfer_fee_enabled)||flag(token.transferFeeEnable))bad(12,"Transfer fee feature reported");
+      if(flag(token.non_transferable)||flag(token.nonTransferable))bad(25,"Token may be non-transferable");
+      if(flag(token.default_account_state)||flag(token.defaultAccountState))bad(15,"Default account state may restrict transfers");
+    }else{
+      if(flag(token.is_honeypot))bad(55,"Honeypot flag is enabled");
+      if(flag(token.cannot_sell_all))bad(40,"Some holders may be unable to sell all tokens");
+      if(flag(token.cannot_buy))bad(35,"Buying is flagged as restricted");
+      if(flag(token.is_blacklisted))bad(25,"Blacklist capability or status is flagged");
+      if(flag(token.hidden_owner))bad(20,"Hidden owner is flagged");
+      if(flag(token.can_take_back_ownership))bad(25,"Ownership recovery/takeover capability is flagged");
+      if(flag(token.owner_change_balance))bad(30,"Owner may be able to change holder balances");
+      if(flag(token.transfer_pausable))bad(15,"Transfers may be pausable");
+      if(flag(token.is_mintable))bad(15,"Additional token minting appears possible");
+      if(flag(token.is_open_source)===false && (token.is_open_source==="0"||token.is_open_source===0))bad(15,"Contract source is not open source/verified");
+      holderChecks(token,bad,note);var bt=parseFloat(token.buy_tax),st=parseFloat(token.sell_tax);
+      if(Number.isFinite(bt)&&bt>0){if(bt>=10)bad(18,"High buy tax reported: "+bt+"%");else if(bt>=5)bad(10,"Buy tax reported: "+bt+"%");else note("Buy tax reported: "+bt+"%")}
+      if(Number.isFinite(st)&&st>0){if(st>=10)bad(22,"High sell tax reported: "+st+"%");else if(st>=5)bad(12,"Sell tax reported: "+st+"%");else note("Sell tax reported: "+st+"%")}
+      if(token.is_proxy!==undefined)note(flag(token.is_proxy)?"Proxy contract detected":"No proxy flag reported");
+      if(token.is_open_source!==undefined&&flag(token.is_open_source))note("Contract source reported as open source/verified");
+    }
+    score=Math.max(0,Math.min(100,score));
+  return{score:score,findings:findings};
+}
+var CS={},SS=null;
+function gpBatch(rows){
+  var need=rows.filter(function(r){var c=CS[key(r)];if(c&&Date.now()-c.t<6e5){r.cs=c.s;return false}return true}),by={};
+  need.forEach(function(r){var id=r.c==="solana"?"solana":GP_CHAIN[r.c];if(id)(by[id]=by[id]||[]).push(r)});
+  return Promise.all(Object.keys(by).map(function(id){
+    var list=by[id].slice(0,30),isSol=id==="solana",
+    addrs=list.map(function(r){return encodeURIComponent(isSol?r.addr:r.addr.toLowerCase())}).join(","),
+    url=isSol?"https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses="+addrs:"https://api.gopluslabs.io/api/v1/token_security/"+id+"?contract_addresses="+addrs;
+    return fetch(url).then(function(x){return x.json()}).then(function(d){
+      var res=d&&d.result;if(!res||typeof res!=="object")return;
+      list.forEach(function(r){var t=res[isSol?r.addr:r.addr.toLowerCase()]||res[r.addr];if(t){var g=gpScore(t,isSol);r.cs=g.score;CS[key(r)]={s:g.score,t:Date.now()}}})
+    }).catch(function(){})
+  }));
+}
+function automatedRisk(r,bid){
+  var box=$(bid||"onchainRisk");if(!box)return;
+  var url,chainId=GP_CHAIN[r.c],isSol=r.c==="solana";
+  if(isSol)url="https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses="+encodeURIComponent(r.addr);
+  else if(chainId)url="https://api.gopluslabs.io/api/v1/token_security/"+chainId+"?contract_addresses="+encodeURIComponent(r.addr.toLowerCase());
+  else {box.innerHTML='<b>🧪 Automated contract security</b><p>GoPlus automated checks are not configured for this network yet.</p><small>Market-based Risk Radar is still available, but contract-level risk is unknown.</small>';return;}
+  fetch(url).then(function(resp){if(!resp.ok)throw new Error("Security API HTTP "+resp.status);return resp.json()}).then(function(data){
+    if(!box.isConnected||(!bid&&cur!==r))return;
+    var result=data&&data.result,token=null;
+    if(isSol){if(Array.isArray(result))token=result[0];else if(result&&typeof result==="object"){token=result[r.addr]||result[r.addr.toLowerCase()]||result[Object.keys(result)[0]]}}
+    else if(result&&typeof result==="object"){token=result[r.addr.toLowerCase()]||result[r.addr]||result[Object.keys(result)[0]]}
+    if(!token||data.code&&String(data.code)!=="1")throw new Error("No security record returned");
+    var g=gpScore(token,isSol),score=g.score,findings=g.findings;
+    var label=score>=80?"Lower detected risk":score>=55?"Moderate detected risk":score>=30?"High detected risk":"Very high detected risk",cls=score>=80?"rk-m":score>=55?"rk-y":"rk-h";
+    if(!findings.length)findings.push({bad:false,label:"No supported high-signal risk flags were returned; coverage may be limited"});
+    r.cs=score;r.cf=findings;if(bid==="ckrisk")setTimeout(function(){ckVerdict(r)},0);
+    box.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>🧪 GoPlus contract scan</b><span class="rk '+cls+'">'+score+'/100 · '+label+'</span></div><ul>'+findings.map(function(f){return'<li class="'+(f.bad?'bad':'good')+'">'+(f.bad?'⚠️ ':'✓ ')+f.label+'</li>'}).join('')+'</ul><small>Network: '+esc(r.c)+' · Address checked: <code>'+esc(r.addr)+'</code>. This is a heuristic score from available API flags, not an audit or guarantee. Unreported fields are unknown, not safe. Holder and liquidity-lock checks cover EVM chains only, and exchange or locker wallets can skew them. GoPlus data can be incomplete or delayed.</small>';
+  }).catch(function(){if(!box.isConnected||(!bid&&cur!==r))return;box.innerHTML='<b>🧪 Automated contract security</b><p>GoPlus could not return a usable result for this token right now.</p><small>Possible causes: unsupported network, token not indexed, API/network failure, or browser cross-origin restrictions. This does not mean the token is safe. Use the external checker links below.</small>';});
+}
+var UNI={ethereum:"ethereum",base:"base",arbitrum:"arbitrum",optimism:"optimism",polygon:"polygon",bsc:"bnb",avalanche:"avalanche",blast:"blast"};
+function tradeLinks(r){
+  var a=encodeURIComponent(r.addr),o="",l=function(h,t,k){return'<a class="tl '+k+'" target="_blank" rel="noopener" href="'+h+'">'+t+' ↗</a>'};
+  if(r.rs<50)o='<div style="flex-basis:100%;color:#ffb74d;font-size:12px">⚠️ High-risk token. Run the contract scan before you buy.</div>';
+  if(r.c==="solana")return o+l("https://jup.ag/swap/SOL-"+a,"Buy on Jupiter","b")+l("https://jup.ag/swap/"+a+"-SOL","Sell on Jupiter","s");
+  if(UNI.hasOwnProperty(r.c)){var u="https://app.uniswap.org/swap?chain="+UNI[r.c];return o+l(u+"&outputCurrency="+a,"Buy on Uniswap","b")+l(u+"&inputCurrency="+a,"Sell on Uniswap","s")}
+  return o+'<div class="q" style="flex-basis:100%">No swap link for '+esc(r.c)+' yet. Use the chart link to find a DEX.</div>';
+}
+function openD(i){openR(D[i])}
+function openR(r){
+  try{history.replaceState(null,"","?c="+encodeURIComponent(r.c)+"&a="+encodeURIComponent(r.addr))}catch(x){}
+  $("detail").innerHTML='<div class="hd"><div><b>'+esc(r.s)+'/'+esc(r.q)+'</b><div class="q">'+esc(r.c)+' · '+esc(r.dex)+(r.sp?' · Sponsored':'')+'</div></div><div style="display:flex;gap:6px;align-items:center"><button class="tf" id="shr">🔗 Share</button><button class="x" id="cl">×</button></div></div>'+
+  '<div class="big"><span id="lp">'+fprice(r.p)+'</span> <span id="lc" class="'+(r.h24>=0?"up":"down")+'" style="font-size:15px">'+(r.h24>=0?"+":"")+r.h24.toFixed(2)+'%</span></div>'+'<div id="ch" style="margin-top:8px;min-height:170px"></div><div class="tfs" id="tfs"></div>'+
+  '<div class="grid"><div class="st"><span>Volume 24h</span><b>'+fm(r.v)+'</b></div><div class="st"><span>Liquidity</span><b>'+fm(r.l)+'</b></div><div class="st"><span>FDV</span><b>'+fm(r.f)+'</b></div><div class="st"><span>Age</span><b>'+fage(r.t)+'</b></div><div class="st"><span>Buys 24h</span><b class="up">'+r.b.toLocaleString()+'</b></div><div class="st"><span>Sells 24h</span><b class="down">'+r.sl.toLocaleString()+'</b></div></div>'+
+  momHTML(r)+riskHTML(r)+'<div id="onchainRisk" class="rbox"><b>🧪 Automated contract security</b><p class="q">Checking GoPlus security data for this token…</p><small>Risk scoring uses available third-party security flags. Missing data is not a clean bill of health.</small></div><div class="rbox"><b>🔎 External security checks</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+(r.c==="solana"?'<a target="_blank" rel="noopener" href="https://rugcheck.xyz/tokens/'+encodeURIComponent(r.addr)+'">Open RugCheck report ↗</a>':'')+'<a target="_blank" rel="noopener" href="https://console.gopluslabs.io/token-security">Open GoPlus checker ↗</a><a target="_blank" rel="noopener" href="'+(TS_CHAIN[r.c]?"https://tokensniffer.com/token/"+TS_CHAIN[r.c]+"/"+encodeURIComponent(r.addr):"https://tokensniffer.com/")+'">Open TokenSniffer ↗</a><button type="button" class="tf" data-copy-addr="1">Copy token address</button></div><small>GoPlus and TokenSniffer do not provide a verified deep-link format for every chain here, so PairScope opens their checker and lets you copy the exact address to paste. The automated GoPlus result above is queried using the selected token address and network.</small></div><div class="rbox"><b>↗ Trade this token</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+tradeLinks(r)+'<a target="_blank" rel="noopener" href="'+esc(r.url)+'">Trade / chart on DexScreener ↗</a></div><small>Confirm the network and token contract before swapping. External links open the swap page in a new tab; in-app trades are signed in your own wallet and PairScope never holds your keys or funds. Uniswap only routes tokens that have Uniswap pools, so some tokens may show no route.</small></div><div class="al"><select id="ad"><option value="above">Above</option><option value="below">Below</option></select><input id="ap" type="number" step="any" value="'+r.p+'"><button id="aset">🔔 Set alert</button></div>'+'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:block;margin-top:12px;color:var(--accent)">Open full chart on DexScreener ↗</a><div class="note" style="margin-bottom:0">Chart data from GeckoTerminal.</div>';
+  $("detail").classList.add("open");drawTF(r,"15m");automatedRisk(r);liveStart(r);
+}
+$("q").oninput=function(e){clearTimeout(timer);var v=e.target.value.trim();timer=setTimeout(function(){mode=v?"search":"trending";term=v;tabs();load(false)},500)};
+$("tabs").onclick=function(e){var m=e.target.getAttribute("data-m");if(!m)return;if(m==="check"){mode="check";tabs();return}if(m==="picks"){mode="picks";tabs();showPicks();return}if(m==="map"){mode="map";tabs();showMap();return}if(m==="trending"||m==="gainers"||m==="losers"||m==="watch"||m==="new"||m==="surge"||m==="featured"){$("q").value="";term=""}else{term=$("q").value.trim()||"pepe";$("q").value=term}mode=m;if(m==="new"){sortK="age";dir=1}else if(m==="surge"){sortK="ht";dir=-1}else if(m==="gainers"){sortK="h24";dir=-1}else if(m==="losers"){sortK="h24";dir=1}else if(sortK==="age"||sortK==="ht"){sortK="v";dir=-1}tabs();load(false)};
+$("chips").onclick=function(e){if(e.target.getAttribute("data-liq")){minLiq=!minLiq}else if(e.target.getAttribute("data-rk")){onlyRk=!onlyRk}else{var c=e.target.getAttribute("data-c");if(!c)return;chain=c}chips();render()};
+document.querySelector("thead").onclick=function(e){var k=e.target.getAttribute("data-k");if(!k)return;dir=(sortK===k)?-dir:-1;sortK=k;render()};
+$("body").onclick=function(e){var ca=e.target.getAttribute("data-ca");if(ca){var el=e.target,old=el.textContent,done=function(){el.textContent="✓ Copied";setTimeout(function(){el.textContent=old},1200)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ca).then(done,function(){prompt("Copy token address",ca)})}else{prompt("Copy token address",ca)}return}var w=e.target.getAttribute("data-w");if(w){var i=W.indexOf(w);if(i>-1)W.splice(i,1);else W.push(w);saveW();tabs();if(mode==="watch"){D=D.filter(function(r){return W.indexOf(key(r))>-1});chips()}render();return}
+var tr=e.target.closest("tr");if(tr&&tr.getAttribute("data-i"))openD(+tr.getAttribute("data-i"))};
+$("detail").onclick=function(e){if(e.target.getAttribute("data-copy-addr")&&cur){var addr=cur.addr;function copied(){e.target.textContent="✓ Address copied"}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(addr).then(copied,function(){prompt("Copy token address",addr)})}else{prompt("Copy token address",addr)}return}
+if(e.target.id==="shr"&&cur){var u=location.origin+location.pathname+"?c="+encodeURIComponent(cur.c)+"&a="+encodeURIComponent(cur.addr),b=e.target;
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){b.textContent="✓ Link copied"},function(){prompt("Copy this link",u)})}
+  else if(navigator.share){navigator.share({title:"PairScope: "+cur.s,url:u}).catch(function(){})}
+  else{prompt("Copy this link",u)}
+  return}
+if(e.target.id==="aset"&&cur){var pv=parseFloat($("ap").value);if(!(pv>0))return;A.push({k:key(cur),s:cur.s,d:$("ad").value,p:pv});saveA();renderAlerts();e.target.textContent="✓ Alert set";try{if(window.Notification&&Notification.permission==="default")Notification.requestPermission()}catch(x){}return}
+var tf=e.target.getAttribute("data-tf");if(tf&&cur)drawTF(cur,tf);if(e.target.id==="cl"){liveStop();$("detail").classList.remove("open");try{history.replaceState(null,"",location.pathname)}catch(x){}}};
+function renderAlerts(){
+  $("alerts").innerHTML=tgBox()+(A.length?'<div class="q" style="margin:12px 2px 4px">🔔 Your alerts'+(TGL?" (also sent to Telegram)":" (active while this page is open)")+'</div>'+A.map(function(a,i){return'<div class="ai"><span>'+esc(a.s)+' '+esc(a.d)+' '+fprice(a.p)+'</span><span class="x2" data-ad="'+i+'">✕</span></div>'}).join(""):"");
+}
+$("alerts").onclick=function(e){var i=e.target.getAttribute("data-ad");if(i===null)return;A.splice(+i,1);saveA();renderAlerts()};
+$("toast").onclick=function(){$("toast").style.display="none"};
+function fire(a,now){
+  var msg="🔔 "+a.s+" is "+a.d+" "+fprice(a.p)+" (now "+fprice(now)+")";
+  $("toast").textContent=msg;$("toast").style.display="block";
+  try{if(window.Notification&&Notification.permission==="granted")new Notification("PairScope alert",{body:msg})}catch(x){}
+}
+function checkAlerts(){
+  if(!A.length)return;
+  var by={};A.forEach(function(a){var p=a.k.split("|");(by[p[0]]=by[p[0]]||[]).push(p[1])});
+  Promise.all(Object.keys(by).map(function(c){return fetch(B+"/tokens/v1/"+c+"/"+by[c].slice(0,30).join(",")).then(function(r){return r.json()}).catch(function(){return[]})}))
+  .then(function(arrs){
+    var rows=dedupe([].concat.apply([],arrs).map(map)),hit=false;
+    rows.forEach(function(r){A=A.filter(function(a){
+      if(a.k!==key(r))return true;
+      var ok=a.d==="above"?r.p>=a.p:r.p<=a.p;
+      if(ok){fire(a,r.p);hit=true;return false}return true})});
+    if(hit){saveA();renderAlerts()}
+  });
+}
+function fromUrl(){
+  var p=new URLSearchParams(location.search),c=p.get("c"),a=p.get("a");
+  if(!c||!a)return;
+  fetch(B+"/tokens/v1/"+encodeURIComponent(c)+"/"+encodeURIComponent(a)).then(function(r){return r.json()}).then(function(l){
+    var rows=dedupe(l.map(map));if(rows.length)openR(rows[0]);
+  }).catch(function(){});
+}
+var FEATURED=[],FEAT_API="https://pairscope-featured.dr-hamzakhan0.workers.dev";
+function getFeatured(){
+  return fetch(FEAT_API+"/featured").then(function(r){return r.json()}).catch(function(){return[]}).then(function(l){FEATURED=Array.isArray(l)?l:[];return getFeatured2()})
+}
+function getFeatured2(){
+  var by={};FEATURED.forEach(function(f){(by[f.c]=by[f.c]||[]).push(f.a)});
+  var cs=Object.keys(by);if(!cs.length)return Promise.resolve([]);
+  return Promise.all(cs.map(function(c){return fetch(B+"/tokens/v1/"+encodeURIComponent(c)+"/"+by[c].slice(0,30).map(encodeURIComponent).join(",")).then(function(r){return r.json()}).catch(function(){return[]})})).then(function(arrs){var rows=dedupe([].concat.apply([],arrs).map(map));rows.forEach(function(r){r.sp=true});return rows});
+}
+$("feat").onclick=function(e){var t=e.target;
+  if(t.id==="lst"){var b=$("lstbox");b.style.display=b.style.display==="none"?"block":"none";return}
+  if(t.id==="lstcopy"){var ad=$("lstaddr").textContent;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ad).then(function(){t.textContent="✓ Copied"},function(){prompt("Copy address",ad)})}else{prompt("Copy address",ad)}}};
+var TG_API="https://pairscope-alerts.dr-hamzakhan0.workers.dev",TG_BOT="PairScopeAlertsBot",TGL=false,TGU="";
+try{TGU=localStorage.getItem("ps_uid")||"";if(!/^[A-Za-z0-9_-]{16,64}$/.test(TGU)){var ab=new Uint8Array(18);crypto.getRandomValues(ab);TGU=Array.prototype.map.call(ab,function(b){return("0"+b.toString(16)).slice(-2)}).join("");localStorage.setItem("ps_uid",TGU)}}catch(e){TGU=""}
+function tgBox(){
+  if(!TG_API||!TGU)return"";
+  if(TGL)return'<div class="ai"><span>📲 Telegram connected. Alerts reach your phone even when this page is closed.</span><span class="x2" data-tgoff="1" title="Disconnect">✕</span></div>';
+  return'<div class="ai"><span>📲 Get alerts on Telegram, even when this page is closed</span><a class="tl b" target="_blank" rel="noopener" data-tgon="1" href="https://t.me/'+TG_BOT+'?start='+TGU+'">Connect ↗</a></div>';
+}
+function syncAlerts(){
+  if(!TG_API||!TGU||!TGL)return;
+  fetch(TG_API+"/alerts",{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({uid:TGU,alerts:A.map(function(a){return{k:a.k,s:a.s,d:a.d,p:a.p}})})}).catch(function(){});
+}
+function tgPull(){
+  if(!TG_API||!TGU)return;
+  fetch(TG_API+"/me?uid="+TGU).then(function(r){return r.json()}).then(function(d){
+    TGL=!!d.linked;
+    if(TGL&&Array.isArray(d.alerts)){
+      var first=false;try{first=!localStorage.getItem("ps_tgsync")}catch(e){}
+      if(first){
+        var seen={},m=[];A.concat(d.alerts).forEach(function(a){var q=a.k+"|"+a.d+"|"+a.p;if(!seen[q]){seen[q]=1;m.push(a)}});
+        A=m.slice(0,20);try{localStorage.setItem("ps_tgsync","1");localStorage.setItem("ps_alerts",JSON.stringify(A))}catch(e){}
+        syncAlerts();
+      }else{A=d.alerts;try{localStorage.setItem("ps_alerts",JSON.stringify(A))}catch(e){}}
+    }
+    renderAlerts();
+  }).catch(function(){});
+}
+function tgWatch(){var n=0,iv=setInterval(function(){n++;if(TGL||n>40){clearInterval(iv);return}tgPull()},4000)}
+function tgUnlink(){
+  fetch(TG_API+"/unlink",{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({uid:TGU})}).catch(function(){});
+  TGL=false;try{localStorage.removeItem("ps_tgsync")}catch(e){}renderAlerts();
+}
+$("alerts").addEventListener("click",function(e){var t=e.target;if(t.getAttribute("data-tgoff"))tgUnlink();else if(t.getAttribute("data-tgon"))tgWatch()});
+var VIS=[],scanBusy=false;
+function csKnown(r){var c=CS[key(r)];return c&&Date.now()-c.t<6e5?c:null}
+function csCell(r){
+  if(r.cs===undefined)return'<td class="q">'+(r.cp?"…":"–")+'</td>';
+  return'<td><span class="rk rk-'+(r.cs>=80?"g":r.cs>=55?"y":"r")+'">'+r.cs+'</span></td>';
+}
+function caCell(r){var a=r.addr||"";if(!a)return'<td class="q">–</td>';
+  return'<td><span class="q" data-ca="'+esc(a)+'" title="'+esc(a)+' (tap to copy)" style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;cursor:pointer">'+esc(a.slice(0,6)+"…"+a.slice(-4))+'</span></td>';
+}
+function scanVisible(){
+  if(scanBusy)return;
+  var list=VIS.filter(function(r){return r.cs===undefined&&!csKnown(r)&&(r.c==="solana"||GP_CHAIN[r.c])}).slice(0,30);
+  if(!list.length)return;
+  scanBusy=true;list.forEach(function(r){r.cp=1});
+  gpBatch(list).catch(function(){}).then(function(){
+    list.forEach(function(r){r.cp=0;if(r.cs===undefined&&!CS[key(r)])CS[key(r)]={s:undefined,t:Date.now()-5.4e5}});
+    scanBusy=false;if(mode==="map")showMap();else if(mode!=="check"&&mode!=="picks")render();
+  });
+}
+var PK=[];try{PK=JSON.parse(localStorage.getItem("ps_picks")||"[]")}catch(e){PK=[]}
+function savePK(){try{localStorage.setItem("ps_picks",JSON.stringify(PK.slice(-100)))}catch(e){}}
+function recordPicks(rows){
+  var now=Date.now(),ch=false;
+  rows.forEach(function(r){
+    var k=key(r);
+    if(PK.some(function(x){return x.k===k&&now-x.t<864e5}))return;
+    PK.push({k:k,s:r.s,c:r.c,a:r.addr,p:r.p,t:now,cs:r.cs});ch=true;
+  });
+  if(ch)savePK();
+}
+function showPicks(){
+  var box=$("pkout");
+  if(!PK.length){box.innerHTML='<div class="rbox q" style="margin-top:0">No picks saved yet. Open the Surges tab and leave it open. Every token that passes the checks is saved here with its price at that moment.</div>';return}
+  box.innerHTML='<div class="rbox q" style="margin-top:0">Loading prices…</div>';
+  var by={};PK.forEach(function(x){if(!by[x.c])by[x.c]=[];if(by[x.c].indexOf(x.a)<0)by[x.c].push(x.a)});
+  Promise.all(Object.keys(by).map(function(c){
+    return fetch(B+"/tokens/v1/"+encodeURIComponent(c)+"/"+by[c].slice(-30).map(encodeURIComponent).join(",")).then(function(r){return r.json()}).catch(function(){return[]})
+  })).then(function(arrs){
+    if(mode!=="picks")return;
+    var now={};dedupe([].concat.apply([],arrs.filter(Array.isArray)).map(map)).forEach(function(r){now[key(r)]=r.p});
+    var rows=PK.slice().reverse().map(function(x){var n=now[x.k];return{x:x,n:n,ch:n>0&&x.p>0?(n/x.p-1)*100:null}});
+    var ok=rows.filter(function(r){return r.ch!==null}),win=ok.filter(function(r){return r.ch>0}).length,avg=ok.length?ok.reduce(function(a,r){return a+r.ch},0)/ok.length:0;
+    box.innerHTML='<div class="rbox" style="margin-top:0"><b>📈 How Surges picks did</b><div class="q" style="margin-top:6px">'+PK.length+' saved · '+ok.length+' priced · <span class="up">'+win+' up</span> · '+(ok.length-win)+' down · average '+(avg>=0?"+":"")+avg.toFixed(1)+'% since pick</div><small>Saved in this browser only, from the times you had the Surges tab open. Prices come from each token\'s largest pool and can move fast. Not financial advice.</small><div style="margin-top:10px"><button type="button" class="tf" id="pkclr">Clear list</button></div></div><div class="ptb" style="margin-top:12px"><table><thead><tr><th>Token</th><th>Picked</th><th>Price then</th><th>Price now</th><th>Change</th><th>Contract</th></tr></thead><tbody>'+rows.map(function(r){var c=r.ch;return'<tr><td><span class="sym">'+esc(r.x.s)+'</span><span class="q"> · '+esc(r.x.c)+'</span></td><td>'+fage(r.x.t)+' ago</td><td>'+fprice(r.x.p)+'</td><td>'+(r.n>0?fprice(r.n):"–")+'</td><td class="'+(c===null?"q":c>=0?"up":"down")+'">'+(c===null?"–":(c>=0?"+":"")+c.toFixed(1)+"%")+'</td>'+csCell({cs:r.x.cs})+'</tr>'}).join("")+'</tbody></table></div>';
+  });
+}
+$("pk").onclick=function(e){if(e.target.id==="pkclr"){PK=[];savePK();showPicks()}};
+var VL=["","🟢 Lower detected risk","🟡 Caution","🔴 High risk"],VT=["","No major red flags from the checks PairScope can run. That is not a guarantee.","Some warning signs. Read the flags below before you trade.","Several serious warning signs. Treat this token as dangerous unless you can verify it yourself."];
+function verdictOf(r){
+  var rs=r.rs,cs=r.cs,flags=[];
+  (r.cf||[]).forEach(function(f){if(f.bad)flags.push(f.label)});
+  if(rs!==undefined&&rs<50)flags.push("Market Risk Radar score is low ("+rs+"/100)");
+  if(r.t&&Date.now()-r.t<864e5)flags.push("Pair is only "+fage(r.t)+" old");
+  if(r.l>0&&r.l<1e4)flags.push("Liquidity is thin ("+fm(r.l)+")");
+  var lvl=((cs!==undefined&&cs<55)||(rs!==undefined&&rs<40))?3:((cs!==undefined&&cs<80)||(rs!==undefined&&rs<70)||flags.length>=2||cs===undefined)?2:1;
+  return{lvl:lvl,flags:flags};
+}
+function shareUrl(r){return location.origin+location.pathname+"?scan="+encodeURIComponent(r.addr)+"&c="+encodeURIComponent(r.c)}
+function ckReport(r){
+  var v=verdictOf(r);
+  return "PairScope report: "+(r.q?r.s+"/"+r.q:r.s)+" ("+r.c+")\nVerdict: "+VL[v.lvl]+"\nContract scan: "+(r.cs!==undefined?r.cs+"/100":"n/a")+(r.rs!==undefined?" · Market risk: "+r.rs+"/100":"")+(r.l?" · Liquidity "+fm(r.l):"")+(r.t?" · Age "+fage(r.t):"")+"\n"+v.flags.slice(0,4).map(function(f){return"- "+f}).join("\n")+"\nCheck it yourself: "+shareUrl(r)+"\nNot financial advice.";
+}
+function ckVerdict(r){
+  var el=$("ckverdict");if(!el||ckRow!==r)return;
+  var v=verdictOf(r);
+  el.innerHTML='<div class="rbox" style="margin-top:0;margin-bottom:12px"><b>'+VL[v.lvl]+'</b><div style="margin-top:6px">'+VT[v.lvl]+'</div>'+(v.flags.length?'<ul>'+v.flags.slice(0,4).map(function(f){return'<li class="bad">⚠️ '+esc(f)+'</li>'}).join("")+'</ul>':"")+(r.cs===undefined?'<div class="q">Contract scan is still running or not available for this network.</div>':"")+'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="tf" data-ckrep="1">Copy report</button><button type="button" class="tf" data-cklink="1">Copy share link</button></div></div>';
+}
+function cp(txt,b){
+  var done=function(){var o=b.textContent;b.textContent="✓ Copied";setTimeout(function(){b.textContent=o},1500)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){prompt("Copy this",txt)})}else{prompt("Copy this",txt)}
+}
+function scanFromUrl(){
+  var p=new URLSearchParams(location.search),a=p.get("scan"),c=p.get("c");
+  if(!a)return;
+  mode="check";tabs();$("cka").value=a;
+  if(c&&/^[a-z0-9-]{2,30}$/.test(c)&&$("ckc").querySelector('option[value="'+c+'"]'))$("ckc").value=c;
+  scanToken();
+}
+function showMap(){
+  var box=$("mpout");
+  if(!D.length){
+    box.innerHTML='<div class="rbox q" style="margin-top:0">Loading tokens…</div>';
+    getTrending().then(function(rows){if(mode!=="map")return;D=rows;showMap()}).catch(function(){box.innerHTML='<div class="rbox q" style="margin-top:0">Could not load tokens. Try again.</div>'});
+    return;
+  }
+  var list=D.slice(0,70),W=340,H=320,L=34,T=14,R=8,BM=30,pw=W-L-R,ph=H-T-BM;
+  VIS=list;setTimeout(scanVisible,0);
+  var dots=list.map(function(r,i){
+    var x=L+pw*Math.max(0,Math.min(100,r.rs))/100,y=T+ph*(1-Math.max(0,Math.min(100,r.ht))/100),
+    rad=3+Math.min(7,Math.max(0,(Math.log10((r.l||0)+1)-3)*2)),
+    col=r.cs===undefined?"#8b98a9":r.cs>=80?"#2ecc71":r.cs>=55?"#f5b942":"#ff5c5c";
+    return'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rad.toFixed(1)+'" fill="'+col+'" fill-opacity=".75" stroke="#fff" stroke-opacity=".35" data-mi="'+i+'" style="cursor:pointer"><title>'+esc(r.s)+' · Heat '+r.ht+' · Risk '+r.rs+'</title></circle>';
+  }).join("");
+  var mx=L+pw/2,my=T+ph/2,tx=function(x,y,t,a){return'<text x="'+x+'" y="'+y+'" text-anchor="'+(a||"middle")+'" font-size="9" style="fill:var(--muted)">'+t+'</text>'};
+  box.innerHTML='<div class="rbox" style="margin-top:0"><b>🧭 Safety vs Heat map</b><div class="q" style="margin-top:6px">Each dot is a token from the list you loaded last. Higher means hotter momentum and further right means lower market risk. Dot color is the contract scan: green 80+, yellow 55 to 79, red below 55, grey not scanned. Tap a dot to open it.</div>'
+   +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:560px;display:block;margin:10px auto 0">'
+   +'<rect x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'" rx="8" style="fill:var(--panel);stroke:var(--line)"/>'
+   +'<rect x="'+mx+'" y="'+T+'" width="'+pw/2+'" height="'+ph/2+'" fill="#2ecc71" fill-opacity=".08"/>'
+   +'<line x1="'+mx+'" y1="'+T+'" x2="'+mx+'" y2="'+(T+ph)+'" stroke="#8b98a9" stroke-opacity=".3" stroke-dasharray="3 4"/>'
+   +'<line x1="'+L+'" y1="'+my+'" x2="'+(L+pw)+'" y2="'+my+'" stroke="#8b98a9" stroke-opacity=".3" stroke-dasharray="3 4"/>'
+   +tx(L+pw*.75,T+14,"Hot and lower risk")+tx(L+pw*.25,T+14,"Hot and risky")+tx(L+pw*.75,T+ph-6,"Quiet and lower risk")+tx(L+pw*.25,T+ph-6,"Quiet and risky")
+   +tx(L+pw/2,H-8,"Risk Radar score (higher is safer)")
+   +'<text x="10" y="'+(T+ph/2)+'" font-size="9" text-anchor="middle" transform="rotate(-90 10 '+(T+ph/2)+')" style="fill:var(--muted)">Heat</text>'
+   +dots+'</svg></div>';
+}
+$("mp").onclick=function(e){var i=e.target.getAttribute("data-mi");if(i!==null&&D[i])openR(D[i])};
+var liveT=null,liveBusy=false;
+function liveStop(){clearInterval(liveT);liveT=null}
+function liveStart(r){
+  liveStop();
+  liveT=setInterval(function(){
+    if(cur!==r||!$("detail").classList.contains("open")){liveStop();return}
+    if(document.hidden||liveBusy)return;
+    liveBusy=true;
+    fetch(B+"/tokens/v1/"+encodeURIComponent(r.c)+"/"+encodeURIComponent(r.addr)).then(function(x){return x.json()}).then(function(l){
+      if(cur!==r||!Array.isArray(l))return;
+      var raw=l.filter(function(x){return x.pairAddress===r.pair})[0];if(!raw)return;
+      var n=map(raw),el=$("lp"),lc=$("lc");
+      if(!(n.p>0)||!el)return;
+      if(n.p!==r.p){el.style.color=n.p>r.p?"var(--up)":"var(--down)";clearTimeout(el._t);el._t=setTimeout(function(){el.style.color=""},700)}
+      el.textContent=fprice(n.p);
+      lc.className=n.h24>=0?"up":"down";lc.textContent=(n.h24>=0?"+":"")+n.h24.toFixed(2)+"%";
+      r.p=n.p;r.h24=n.h24;
+    }).catch(function(){}).then(function(){liveBusy=false});
+  },1000);
+}
+var ckId=0,ckRow=null;
+$("ckc").innerHTML='<option value="auto">Auto-detect network</option><option value="solana">solana</option>'+Object.keys(GP_CHAIN).map(function(c){return'<option value="'+c+'">'+c+'</option>'}).join("");
+function ckMsg(t){$("ckout").innerHTML='<div class="rbox q">'+t+'</div>'}
+function scanToken(){
+  var a=$("cka").value.trim(),sel=$("ckc").value,evm=/^0x[a-fA-F0-9]{40}$/.test(a),sol=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
+  if(!evm&&!sol)return ckMsg("Paste a valid token contract address (EVM 0x… or Solana).");
+  if(sel!=="auto"&&(sel==="solana")!==sol)return ckMsg("That address format does not match the selected network.");
+  var id=++ckId;ckMsg("Scanning…");
+  fetch(sel==="auto"?B+"/latest/dex/tokens/"+a:B+"/tokens/v1/"+sel+"/"+a).then(function(x){return x.json()}).then(function(d){
+    var raw=(Array.isArray(d)?d:(d.pairs||[])).filter(function(x){return x.baseToken&&x.baseToken.address&&x.baseToken.address.toLowerCase()===a.toLowerCase()});
+    return dedupe(raw.map(map)).sort(function(x,y){return y.l-x.l})[0]||null;
+  }).catch(function(){return false}).then(function(r){
+    if(id!==ckId)return;
+    var c=r?r.c:(sel!=="auto"?sel:(sol?"solana":null));
+    if(!c)return ckMsg(r===false?"Could not reach DexScreener. Check your connection, or choose the network to run the contract scan only.":"No trading pair found, so the network is unknown. Choose the network above and scan again.");
+    var rr=r||{c:c,addr:a,s:a.slice(0,6)+"…"+a.slice(-4),q:"",dex:"",url:""};
+    var h=r?'<div class="rbox" style="margin-top:0"><div class="hd"><div><b>'+esc(r.s)+'/'+esc(r.q)+'</b><div class="q">'+esc(r.c)+' · '+esc(r.dex)+'</div></div><div class="big" style="margin:0;font-size:20px">'+fprice(r.p)+' <span class="'+(r.h24>=0?"up":"down")+'" style="font-size:14px">'+(r.h24>=0?"+":"")+r.h24.toFixed(2)+'%</span></div></div><div class="grid"><div class="st"><span>Volume 24h</span><b>'+fm(r.v)+'</b></div><div class="st"><span>Liquidity</span><b>'+fm(r.l)+'</b></div><div class="st"><span>FDV</span><b>'+fm(r.f)+'</b></div><div class="st"><span>Age</span><b>'+fage(r.t)+'</b></div></div></div>'+riskHTML(r)+momHTML(r)
+      :'<div class="rbox" style="margin-top:0"><b>'+esc(rr.s)+'</b><div class="q">'+esc(c)+' · '+(r===false?"market data unavailable":"no trading pair found")+', so market checks are skipped. Contract scan below.</div></div>';
+    h+='<div id="ckrisk" class="rbox"><b>🧪 Automated contract security</b><p class="q">Checking GoPlus security data…</p></div><div class="rbox"><b>↗ Trade &amp; more checks</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+tradeLinks(rr)+(c==="solana"?'<a target="_blank" rel="noopener" href="https://rugcheck.xyz/tokens/'+a+'">RugCheck ↗</a>':'')+(TS_CHAIN[c]?'<a target="_blank" rel="noopener" href="https://tokensniffer.com/token/'+TS_CHAIN[c]+'/'+a+'">TokenSniffer ↗</a>':'')+(r?'<a target="_blank" rel="noopener" href="'+esc(r.url)+'">DexScreener ↗</a><button type="button" class="tf" data-ckopen="1">Chart &amp; details</button>':'')+'<button type="button" class="tf" data-ckcopy="1">Copy address</button></div><small>Confirm the network and contract before swapping. Trades are signed in your own wallet; PairScope never holds your keys or funds.</small></div>';
+    ckRow=rr;$("ckout").innerHTML='<div id="ckverdict"></div>'+h;automatedRisk(rr,"ckrisk");ckVerdict(rr);
+  });
+}
+$("checker").onclick=function(e){var t=e.target;
+  if(t.id==="ckgo"){scanToken();return}
+  if(t.getAttribute("data-ckrep")&&ckRow){cp(ckReport(ckRow),t);return}
+  if(t.getAttribute("data-cklink")&&ckRow){cp(shareUrl(ckRow),t);return}
+  if(t.getAttribute("data-ckopen")&&ckRow){openR(ckRow);return}
+  if(t.getAttribute("data-ckcopy")&&ckRow){var ad=ckRow.addr;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ad).then(function(){t.textContent="✓ Copied"},function(){prompt("Copy token address",ad)})}else{prompt("Copy token address",ad)}}};
+$("cka").onkeydown=function(e){if(e.key==="Enter")scanToken()};
+(function(){var h=document.querySelector('link[rel="icon"]').href;$("logo").src=h})();
+tabs();chips();renderAlerts();load(false);fromUrl();tgPull();document.addEventListener("visibilitychange",function(){if(!document.hidden)tgPull()});scanFromUrl();
+setTimeout(checkAlerts,4000);setInterval(checkAlerts,15000);
+setInterval(function(){load(true)},15000);
+</script>
+<script>
+/* PairScope in-site Buy/Sell via the user's own wallet (MetaMask-type EVM wallets and Phantom).
+   Separate block: it only wraps openR() to add a panel and does not change any existing function. */
+(function(){
+var EV={ethereum:1,bsc:56,base:8453,arbitrum:42161,optimism:10,polygon:137,avalanche:43114};
+var NAT={ethereum:"ETH",bsc:"BNB",base:"ETH",arbitrum:"ETH",optimism:"ETH",polygon:"POL",avalanche:"AVAX"};
+var EXP={ethereum:"https://etherscan.io/tx/",bsc:"https://bscscan.com/tx/",base:"https://basescan.org/tx/",arbitrum:"https://arbiscan.io/tx/",optimism:"https://optimistic.etherscan.io/tx/",polygon:"https://polygonscan.com/tx/",avalanche:"https://snowtrace.io/tx/",solana:"https://solscan.io/tx/"};
+var NATIVE="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",SOLM="So11111111111111111111111111111111111111112";
+var PX="https://api.paraswap.io",JU="https://lite-api.jup.ag";
+var P={acct:{evm:"",sol:""},side:"buy",q:null,busy:false},SD={};
+
+function evmP(){var e=window.ethereum;if(!e)return null;if(e.providers&&e.providers.length){return e.providers.filter(function(p){return p.isMetaMask})[0]||e.providers[0]}return e}
+function solP(){var p=(window.phantom&&window.phantom.solana)||window.solana;return p&&p.isPhantom?p:null}
+function rq(m,p){return evmP().request({method:m,params:p||[]})}
+function hx(v){return"0x"+BigInt(v).toString(16)}
+function pad(h){h=String(h).replace(/^0x/,"").toLowerCase();return"0".repeat(64-h.length)+h}
+function units(s,d){s=String(s).trim();if(!/^(\d+\.?\d*|\.\d+)$/.test(s))return null;var p=s.split("."),f=(p[1]||"").slice(0,d);f=f+"0".repeat(d-f.length);var v=BigInt((p[0]||"0")+f);return v>0n?v:null}
+function human(v,d,mx){var s=v.toString();if(d>0){while(s.length<=d)s="0"+s;var w=s.slice(0,s.length-d),f=s.slice(s.length-d).replace(/0+$/,"").slice(0,mx||8);s=f?w+"."+f:w}return s}
+function b58(u){var A="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",d=[0],i,j,c,s="";for(i=0;i<u.length;i++){c=u[i];for(j=0;j<d.length;j++){c+=d[j]<<8;d[j]=c%58;c=(c/58)|0}while(c){d.push(c%58);c=(c/58)|0}}for(i=0;i<u.length&&u[i]===0;i++)s+="1";for(i=d.length-1;i>=0;i--)s+=A[d[i]];return s}
+function jf(u,o){return fetch(u,o).then(function(x){return x.json().then(function(j){if(!x.ok)throw new Error((j&&(j.error||j.message))||("HTTP "+x.status));return j},function(){throw new Error("HTTP "+x.status)})})}
+function em(e){if(e&&e.code===4001)return"Rejected in wallet.";var m=e&&(e.message||(e.error&&e.error.message))||String(e||"Unknown error");return m.length>180?m.slice(0,180)+"…":m}
+function slip(){return +$("trslip").value||100}
+function kind(r){return r.c==="solana"?"sol":"evm"}
+function short(a){return a?a.slice(0,6)+"…"+a.slice(-4):""}
+function msg(t,bad){var m=$("trmsg");if(m){m.style.color=bad?"var(--down)":"var(--muted)";m.textContent=t}}
+
+function connect(r){
+  if(r.c==="solana"){var p=solP();if(!p)return Promise.reject(new Error("Phantom wallet not found. Install Phantom, or open this page inside its in-app browser."));
+    return p.connect().then(function(x){P.acct.sol=x.publicKey.toString()})}
+  var e=evmP();if(!e)return Promise.reject(new Error("No EVM wallet found. Install MetaMask (or similar), or open this page inside your wallet's in-app browser."));
+  return e.request({method:"eth_requestAccounts"}).then(function(a){P.acct.evm=a[0]})
+}
+function ensureChain(id){return rq("eth_chainId").then(function(c){if(parseInt(c,16)===id)return;return rq("wallet_switchEthereumChain",[{chainId:hx(id)}])})}
+function evmDec(a){return rq("eth_call",[{to:a,data:"0x313ce567"},"latest"]).then(function(h){var d=parseInt(h,16);if(!(d>=0&&d<=36))throw new Error("Could not read token decimals.");return d})}
+function solDec(a){if(SD[a]!=null)return Promise.resolve(SD[a]);
+  return jf(JU+"/tokens/v2/search?query="+encodeURIComponent(a)).then(function(l){var t=(Array.isArray(l)?l:[]).filter(function(x){return x.id===a})[0];if(!t||t.decimals==null)throw new Error("Could not read token decimals.");SD[a]=t.decimals;return t.decimals})}
+
+function qEvm(r,a){
+  var id=EV[r.c],buy=P.side==="buy";
+  return ensureChain(id).then(function(){return evmDec(r.addr)}).then(function(td){
+    var sd=buy?18:td,dd=buy?td:18,s=buy?NATIVE:r.addr,d=buy?r.addr:NATIVE,amt=units(a,sd);
+    if(!amt)throw new Error("Enter a valid amount.");
+    return jf(PX+"/prices?srcToken="+s+"&srcDecimals="+sd+"&destToken="+d+"&destDecimals="+dd+"&amount="+amt+"&side=SELL&network="+id+"&version=6.2").then(function(j){
+      var pr=j.priceRoute;if(!pr||!pr.destAmount)throw new Error("No route found for this token.");
+      var out=BigInt(pr.destAmount);
+      return{kind:"evm",pr:pr,s:s,d:d,sd:sd,dd:dd,amt:amt,out:out,min:out*BigInt(10000-slip())/10000n,sym:buy?r.s:NAT[r.c],gas:pr.gasCostUSD}})})
+}
+function qSol(r,a){
+  var buy=P.side==="buy";
+  return solDec(r.addr).then(function(td){
+    var sd=buy?9:td,dd=buy?td:9,amt=units(a,sd);if(!amt)throw new Error("Enter a valid amount.");
+    return jf(JU+"/swap/v1/quote?inputMint="+(buy?SOLM:r.addr)+"&outputMint="+(buy?r.addr:SOLM)+"&amount="+amt+"&slippageBps="+slip()).then(function(j){
+      if(!j.outAmount)throw new Error("No route found for this token.");
+      return{kind:"sol",qr:j,dd:dd,out:BigInt(j.outAmount),min:BigInt(j.otherAmountThreshold||j.outAmount),sym:buy?r.s:"SOL"}})})
+}
+function waitTx(h){return new Promise(function(res,rej){var n=0;(function p(){rq("eth_getTransactionReceipt",[h]).then(function(x){if(x){x.status==="0x0"?rej(new Error("Approval transaction failed.")):res()}else if(++n>90)rej(new Error("Timed out waiting for approval to confirm."));else setTimeout(p,2000)}).catch(rej)})()})}
+function swEvm(r,q){
+  var id=EV[r.c],buy=P.side==="buy",from=P.acct.evm;
+  return ensureChain(id).then(function(){
+    if(buy)return;
+    var sp=q.pr.tokenTransferProxy;
+    return rq("eth_call",[{to:r.addr,data:"0xdd62ed3e"+pad(from)+pad(sp)},"latest"]).then(function(al){
+      if(BigInt(al)>=q.amt)return;
+      msg("Step 1 of 2: approve "+r.s+" in your wallet…");
+      return rq("eth_sendTransaction",[{from:from,to:r.addr,data:"0x095ea7b3"+pad(sp)+pad(hx(q.amt))}]).then(function(h){msg("Waiting for approval to confirm…");return waitTx(h)})})
+  }).then(function(){
+    msg("Building swap…");
+    return jf(PX+"/transactions/"+id+"?ignoreChecks=true",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({srcToken:q.s,destToken:q.d,srcAmount:q.amt.toString(),srcDecimals:q.sd,destDecimals:q.dd,slippage:slip(),priceRoute:q.pr,userAddress:from,partner:"pairscope"})})
+  }).then(function(t){
+    msg("Confirm the swap in your wallet…");
+    return rq("eth_sendTransaction",[{from:from,to:t.to,value:hx(t.value||"0"),data:t.data}])})
+}
+function swSol(r,q){
+  var p=solP();if(!p)return Promise.reject(new Error("Phantom wallet not found."));
+  msg("Building swap…");
+  return jf(JU+"/swap/v1/swap",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({quoteResponse:q.qr,userPublicKey:P.acct.sol,dynamicComputeUnitLimit:true})}).then(function(j){
+    var raw=atob(j.swapTransaction),u=new Uint8Array(raw.length),i;for(i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i);
+    msg("Confirm the swap in Phantom…");
+    return p.request({method:"signAndSendTransaction",params:{message:b58(u)}})
+  }).then(function(x){return x.signature||x})
+}
+
+function sideUI(r){
+  var buy=P.side==="buy",sym=r.c==="solana"?"SOL":NAT[r.c];
+  Array.prototype.forEach.call(document.querySelectorAll("#trbox [data-trs]"),function(b){b.className="tf"+(b.getAttribute("data-trs")===P.side?" on":"")});
+  $("tramt").placeholder="Amount in "+(buy?sym:r.s);
+  $("trgo").style.display="none";$("trinfo").innerHTML="";P.q=null;
+  $("trwal").textContent=P.acct[kind(r)]?"Connected "+short(P.acct[kind(r)]):"Wallet not connected";
+  $("trconn").textContent=P.acct[kind(r)]?"Switch account":"Connect wallet";
+}
+function box(r){
+  var anchor=$("detail").querySelector(".al");if(!anchor)return;
+  if(!(r.c==="solana"||EV.hasOwnProperty(r.c)))return;
+  P.side="buy";P.q=null;P.busy=false;
+  var wn=r.c==="solana"?"Phantom":"MetaMask or any browser EVM wallet";
+  anchor.insertAdjacentHTML("beforebegin",'<div class="rbox" id="trbox"><div class="hd"><b>💱 Trade in PairScope</b><span class="q" id="trwal"></span></div>'+
+   '<div class="tfs" style="margin-top:10px"><button type="button" class="tf on" data-trs="buy">Buy '+esc(r.s)+'</button><button type="button" class="tf" data-trs="sell">Sell '+esc(r.s)+'</button></div>'+
+   '<div class="al"><input id="tramt" type="number" step="any" min="0" inputmode="decimal"><select id="trslip" title="Max slippage"><option value="50">0.5%</option><option value="100" selected>1%</option><option value="300">3%</option><option value="500">5%</option><option value="1000">10%</option></select></div>'+
+   '<div class="al"><button type="button" id="trconn">Connect wallet</button><button type="button" id="trquote">Get quote</button></div>'+
+   '<div id="trinfo" style="margin-top:10px"></div><div class="al"><button type="button" id="trgo" style="display:none;flex:1"></button></div>'+
+   '<div class="q" id="trmsg" style="margin-top:8px;word-break:break-word"></div>'+
+   '<small>Works with '+wn+'. Trades are routed through '+(r.c==="solana"?"Jupiter":"ParaSwap")+' and signed in your own wallet. PairScope never holds your keys or funds. Always check the quote, slippage and contract before confirming.</small></div>');
+  sideUI(r);
+  var b=$("trbox");
+  b.addEventListener("input",function(e){if(e.target.id==="tramt"||e.target.id==="trslip"){P.q=null;$("trgo").style.display="none";$("trinfo").innerHTML="";msg("")}});
+  b.addEventListener("click",function(e){
+    var t=e.target,s=t.getAttribute&&t.getAttribute("data-trs");
+    if(s){P.side=s;sideUI(r);msg("");return}
+    if(P.busy)return;
+    if(t.id==="trconn"){P.busy=true;msg("Waiting for wallet…");connect(r).then(function(){sideUI(r);msg("")}).catch(function(x){msg(em(x),1)}).then(function(){P.busy=false});return}
+    if(t.id==="trquote"){
+      var a=$("tramt").value;if(!units(a,18)){msg("Enter an amount first.",1);return}
+      P.busy=true;P.q=null;$("trgo").style.display="none";$("trinfo").innerHTML="";msg("Getting quote…");
+      (P.acct[kind(r)]?Promise.resolve():connect(r)).then(function(){return r.c==="solana"?qSol(r,a):qEvm(r,a)}).then(function(q){
+        if(!b.isConnected)return;P.q=q;sideUI0(r);
+        var buy=P.side==="buy";
+        $("trinfo").innerHTML='<div class="st"><span>You receive (estimated)</span><b>'+esc(human(q.out,q.dd))+' '+esc(q.sym)+'</b><span>Minimum after '+(slip()/100)+'% slippage: '+esc(human(q.min,q.dd))+' '+esc(q.sym)+(q.gas?' · est. gas ≈ $'+esc(String(Math.round(+q.gas*100)/100)):'')+'</span></div>'+(r.rs<50?'<div style="color:#ffb74d;font-size:12px;margin-top:6px">⚠️ High-risk token. Run the contract scan before you trade.</div>':'');
+        var g=$("trgo");g.textContent=(buy?"Confirm buy":"Confirm sell")+" in wallet";g.style.display="";msg("");
+      }).catch(function(x){msg(em(x),1)}).then(function(){P.busy=false;sideUI1(r)});return}
+    if(t.id==="trgo"&&P.q){
+      if(r.rs<50&&!confirm("This token has a high risk score. Do you still want to "+P.side+" it?"))return;
+      P.busy=true;
+      (P.q.kind==="sol"?swSol(r,P.q):swEvm(r,P.q)).then(function(h){
+        P.q=null;$("trgo").style.display="none";$("trinfo").innerHTML="";
+        var l=EXP[r.c]?'<a target="_blank" rel="noopener" href="'+EXP[r.c]+encodeURIComponent(h)+'">View transaction ↗</a>':esc(h);
+        $("trmsg").style.color="var(--up)";$("trmsg").innerHTML="✓ Submitted. "+l;
+      }).catch(function(x){msg(em(x),1)}).then(function(){P.busy=false});
+    }
+  });
+}
+function sideUI0(){} function sideUI1(r){var w=$("trwal");if(w)w.textContent=P.acct[kind(r)]?"Connected "+short(P.acct[kind(r)]):"Wallet not connected";var c=$("trconn");if(c)c.textContent=P.acct[kind(r)]?"Switch account":"Connect wallet"}
+
+var _o=openR;
+openR=function(r){_o(r);try{box(r)}catch(e){}};
+})();
+</script>
+<script>
+/* PairScope UX layer: mobile cards, bottom nav, swipe sheet, heat glow, live flash, verdict rings, haptics. Wraps openR only; no existing code changed. */
+(function(){
+var hap=function(n){try{navigator.vibrate&&navigator.vibrate(n||8)}catch(e){}};
+var hotC=function(h){return h>=60?"#ff9f43":h>=30?"#f5c542":"#2b3643"};
+var safeC=function(s){return s>=75?"#2ecc71":s>=50?"#f5c542":"#ff5c5c"};
+document.addEventListener("click",function(e){var t=e.target;if(t.closest&&t.closest("button,.star,.tab,.chip,tbody tr"))hap(7)},true);
+
+/* bottom nav */
+var N=[["trending","🔥","Trending"],["new","🆕","New"],["featured","🌟","Featured"],["surge","⚡","Surges"],["check","🛡️","Checker"],["watch","⭐","Watchlist"]];
+var nav=document.createElement("div");nav.id="psnav";
+nav.innerHTML=N.map(function(n){return'<button type="button" data-n="'+n[0]+'"><i>'+n[1]+'</i>'+n[2]+'</button>'}).join("");
+document.body.appendChild(nav);
+nav.onclick=function(e){var b=e.target.closest("button");if(!b)return;var t=document.querySelector('#tabs [data-m="'+b.getAttribute("data-n")+'"]');if(t)t.click();window.scrollTo({top:0,behavior:"smooth"})};
+function navSync(){var on=document.querySelector("#tabs .tab.on"),m=on&&on.getAttribute("data-m");Array.prototype.forEach.call(nav.children,function(b){b.className=b.getAttribute("data-n")===m?"on":""})}
+new MutationObserver(navSync).observe($("tabs"),{childList:true});navSync();
+
+/* mobile sort picker (table header is hidden on phones) */
+var ss=document.createElement("div");ss.id="pssort";
+ss.innerHTML='Sort <select id="pssel"><option value="v">Volume</option><option value="ht">Heat ⚡</option><option value="h24">24h change</option><option value="h1">1h change</option><option value="l">Liquidity</option><option value="age">Newest</option><option value="rs">Safest</option></select>';
+document.querySelector(".tbl").insertAdjacentElement("beforebegin",ss);
+$("pssel").onchange=function(){var k=this.value,th=document.querySelector('th[data-k="'+k+'"]');if(!th)return;th.click();if(k==="age"&&window.dir===-1)th.click();hap(6)};
+
+/* heat glow + live price flash */
+var PM={};
+function decorate(){
+  Array.prototype.forEach.call(document.querySelectorAll("#body tr[data-i]"),function(tr){
+    var r=D[+tr.getAttribute("data-i")];if(!r)return;
+    tr.style.setProperty("--hc",hotC(r.ht));
+    var k=r.c+"|"+r.addr,td=tr.children[1],o=PM[k];
+    if(td&&o!=null&&o!==r.p){var c=r.p>o?"fu":"fd";td.classList.add(c);setTimeout(function(){td.classList.remove(c)},950)}
+    PM[k]=r.p});
+}
+new MutationObserver(decorate).observe($("body"),{childList:true});
+
+/* detail sheet: overlay, swipe-down to close */
+var ov=document.createElement("div");ov.id="psov";document.body.appendChild(ov);
+ov.onclick=function(){var c=$("cl");if(c)c.click()};
+var dt=$("detail");
+new MutationObserver(function(){ov.classList.toggle("on",dt.classList.contains("open"))}).observe(dt,{attributes:true,attributeFilter:["class"]});
+function swipe(){
+  var g=$("grab");if(!g)return;var y0=0,dy=0,on=false;
+  g.addEventListener("touchstart",function(e){y0=e.touches[0].clientY;dy=0;on=true;dt.style.transition="none"},{passive:true});
+  g.addEventListener("touchmove",function(e){if(!on)return;dy=Math.max(0,e.touches[0].clientY-y0);dt.style.transform="translateY("+dy+"px)"},{passive:true});
+  g.addEventListener("touchend",function(){on=false;dt.style.transition="";dt.style.transform="";if(dy>90){hap(10);var c=$("cl");if(c)c.click()}});
+}
+
+/* verdict + rings */
+function ring(v,l,c,t){v=Math.max(0,Math.min(100,+v||0));var C=2*Math.PI*26;
+  return'<div class="pr"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="6"/><circle cx="32" cy="32" r="26" fill="none" stroke="'+c+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+(C*v/100).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="17" font-weight="700" fill="currentColor">'+t+'</text></svg><span>'+l+'</span></div>'}
+function verdict(r){
+  if(r.rs<50)return"⚠️ Risky setup. Check the contract scan before trading";
+  if(r.ht>=60)return"🔥 Hot and passing basic checks. Can still reverse fast";
+  if(r.ht>=30)return"📈 Moderate activity, nothing alarming on market checks";
+  return"😴 Quiet right now"}
+function panel(r){
+  var cs;try{var k=csKnown(r);cs=k?k.s:r.cs}catch(e){cs=r.cs}
+  var big=dt.querySelector(".big");if(!big)return;
+  big.insertAdjacentHTML("afterend",'<div class="vd"><b>PairScope Verdict · '+esc(verdict(r))+'</b><div class="rings">'+ring(r.ht,"Heat",hotC(r.ht),Math.round(r.ht))+ring(r.rs,"Market safety",safeC(r.rs),Math.round(r.rs))+(cs!=null?ring(cs,"Contract",safeC(cs),Math.round(cs)):ring(0,"Contract","#2b3643","–"))+'</div></div>');
+}
+var _o=openR;
+openR=function(r){_o(r);try{dt.insertAdjacentHTML("afterbegin",'<div id="grab"></div>');swipe();panel(r)}catch(e){}};
+})();
+</script>
+<script>
+/* PairScope UX layer 2: swipe-to-star, pull-to-refresh, trend sparklines, install-to-home-screen. */
+(function(){
+var hap=function(n){try{navigator.vibrate&&navigator.vibrate(n||8)}catch(e){}};
+var pill=document.createElement("div");pill.id="psptr";document.body.appendChild(pill);var pt;
+function note(t,keep,ms){pill.textContent=t;pill.classList.add("on");clearTimeout(pt);if(!keep)pt=setTimeout(function(){pill.classList.remove("on")},ms||1600)}
+function hide(){clearTimeout(pt);pill.classList.remove("on")}
+var dt=$("detail"),bd=$("body");
+
+/* swipe a row left or right to star it */
+var sx,sy,sr,dx,mv,sup=0;
+bd.addEventListener("touchstart",function(e){var tr=e.target.closest("tr[data-i]");if(!tr||e.touches.length>1)return;sr=tr;sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;mv=false},{passive:true});
+bd.addEventListener("touchmove",function(e){if(!sr)return;var x=e.touches[0].clientX-sx,y=e.touches[0].clientY-sy;
+  if(!mv){if(Math.abs(y)>10&&Math.abs(y)>Math.abs(x)){sr=null;return}if(Math.abs(x)>12)mv=true;else return}
+  dx=x;sr.style.transition="none";sr.style.transform="translateX("+Math.max(-110,Math.min(110,x))+"px)";sr.style.opacity=1-Math.abs(x)/400;
+  if(Math.abs(x)>70)note("Release to "+(sr.querySelector(".star.on")?"remove from":"add to")+" watchlist ⭐",1)},{passive:true});
+bd.addEventListener("touchend",function(){if(!sr)return;var tr=sr;sr=null;tr.style.transition="";tr.style.transform="";tr.style.opacity="";
+  if(mv&&Math.abs(dx)>70){var st=tr.querySelector(".star");if(st){var was=st.classList.contains("on");st.click();note(was?"Removed from watchlist":"⭐ Added to watchlist");hap(14)}}else if(mv)hide();
+  if(mv)sup=Date.now()});
+bd.addEventListener("click",function(e){if(Date.now()-sup<450){e.stopPropagation();e.preventDefault()}},true);
+
+/* pull down at the top of the page to refresh */
+var py=0,pd=0,pa=false;
+document.addEventListener("touchstart",function(e){pa=window.scrollY<=0&&e.touches.length===1&&!dt.classList.contains("open")&&!e.target.closest("input,select,#detail,.tabs,.chips,#psnav");py=e.touches[0].clientY;pd=0},{passive:true});
+document.addEventListener("touchmove",function(e){if(!pa||sr)return;pd=e.touches[0].clientY-py;if(pd>25)note(pd>85?"Release to refresh":"↓ Pull to refresh",1)},{passive:true});
+document.addEventListener("touchend",function(){if(pa&&pd>85){note("Refreshing…");hap(12);try{load(false)}catch(e){}}else if(pa&&pd>25)hide();pa=false;pd=0});
+
+/* Heat sparkline on each card: the Heat score recomputed for the 24h, 6h, 1h and 5m windows (same formula as the Heat column) */
+function heatW(r,hw,vol,pch,bu,se,minTx){
+  var hrs=r.t?Math.min(24,Math.max(1,(Date.now()-r.t)/36e5)):24,avg=r.v/hrs,
+  pace=avg>0?(vol/hw)/avg:0,t=bu+se,bp=t>0?bu/t:0.5,
+  h=Math.max(0,Math.min(50,(pace-1)*10))+Math.max(0,Math.min(20,pch))+Math.max(0,Math.min(30,(bp-0.5)*60));
+  if(t<minTx)h*=0.5;return Math.round(h)}
+function heatSeries(r){
+  var hrs=r.t?Math.min(24,Math.max(1,(Date.now()-r.t)/36e5)):24;
+  return[heatW(r,hrs,r.v,r.h24,r.b,r.sl,10),heatW(r,Math.min(6,hrs),r.v6||0,r.h6,r.b6||0,r.s6||0,10),heatW(r,1,r.v1,r.h1,r.b1,r.s1,10),heatW(r,1/12,r.v5,r.m5,r.b5||0,r.s5||0,2)]}
+function spark(r){
+  var v=heatSeries(r),mx=Math.max(40,Math.max.apply(0,v)),W=300,H=34,
+  pts=v.map(function(y,i){return(i*W/3).toFixed(1)+","+(H-3-Math.min(1,y/mx)*(H-6)).toFixed(1)}),
+  col=hotC(r.ht);if(r.ht<30)col="#6f7d8c";
+  return'<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Heat trend, 24h to 5m: '+v.join(", ")+'"><polygon points="0,'+H+' '+pts.join(" ")+' '+W+','+H+'" fill="'+col+'" fill-opacity=".16"/><polyline points="'+pts.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg><div class="spkl"><span>24h</span><span>Heat ⚡ trend</span><span>5m</span></div>'}
+function hotC(h){return h>=60?"#ff9f43":h>=30?"#f5c542":"#2b3643"}
+function sparks(){Array.prototype.forEach.call(document.querySelectorAll("#body tr[data-i]"),function(tr){
+  if(tr.querySelector(".spk"))return;var r=D[+tr.getAttribute("data-i")];if(!r)return;
+  var d=document.createElement("div");d.className="spk";d.innerHTML=spark(r);tr.appendChild(d)})}
+new MutationObserver(sparks).observe(bd,{childList:true});sparks();
+
+/* install to home screen */
+try{
+  var ip=null,ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),stand=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
+  var b=document.createElement("button");b.id="psinst";b.type="button";b.className="chip";b.textContent="📲 Install app";
+  var bar=document.querySelector(".bar");if(bar)bar.appendChild(b);
+  if(!stand&&ios)b.style.display="inline-block";
+  window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();ip=e;if(!stand)b.style.display="inline-block"});
+  window.addEventListener("appinstalled",function(){b.style.display="none";note("✓ PairScope installed")});
+  b.onclick=function(){if(ip){ip.prompt();ip.userChoice.then(function(){ip=null;b.style.display="none"})}else note("Tap the Share button, then “Add to Home Screen”",0,5000)};
+  /* single-file PWA: icons + manifest generated at runtime. Old service workers/caches are cleared so every deploy shows fresh. */
+  var icoSvg=function(rx){return'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#14264a"/></linearGradient><linearGradient id="ln" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00e0b8"/><stop offset="1" stop-color="#4da3ff"/></linearGradient></defs><rect width="512" height="512" rx="'+rx+'" fill="url(#bg)"/><circle cx="256" cy="256" r="150" fill="none" stroke="url(#ln)" stroke-width="22"/><g stroke="#4da3ff" stroke-width="16" stroke-linecap="round"><line x1="256" y1="62" x2="256" y2="108"/><line x1="256" y1="404" x2="256" y2="450"/><line x1="62" y1="256" x2="108" y2="256"/><line x1="404" y1="256" x2="450" y2="256"/></g><polyline points="160,310 212,262 254,292 302,216 352,196" fill="none" stroke="url(#ln)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="160" cy="310" r="17" fill="#00e0b8"/><circle cx="352" cy="196" r="17" fill="#4da3ff"/></svg>'};
+  var svgUrl=function(rx){return"data:image/svg+xml,"+encodeURIComponent(icoSvg(rx))};
+  var png=function(px,rx,cb){try{var im=new Image();im.onload=function(){try{var c=document.createElement("canvas");c.width=c.height=px;c.getContext("2d").drawImage(im,0,0,px,px);cb(c.toDataURL("image/png"))}catch(e){cb(null)}};im.onerror=function(){cb(null)};im.src=svgUrl(rx)}catch(e){cb(null)}};
+  var ati=$("ati"),mf=$("mf");
+  png(180,0,function(u){if(ati)ati.href=u||svgUrl(0)});
+  png(192,112,function(p192){png(512,112,function(p512){
+    var icons=p192&&p512?[{src:p192,sizes:"192x192",type:"image/png",purpose:"any"},{src:p512,sizes:"512x512",type:"image/png",purpose:"any"}]:[{src:svgUrl(112),sizes:"any",type:"image/svg+xml",purpose:"any"}];
+    var base=location.href.split("#")[0].split("?")[0];
+    var man={name:"PairScope",short_name:"PairScope",description:"Live DEX pair scanner with Heat scores, Risk Radar and a contract security checker.",start_url:base,scope:base.replace(/[^\/]*$/,""),display:"standalone",background_color:"#0b0e11",theme_color:"#0b0e11",icons:icons};
+    try{if(mf)mf.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:"application/manifest+json"}))}catch(e){}
+  })});
+  try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){});if(window.caches)caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k)})}).catch(function(){})}catch(e){}
+}catch(e){}
+})();
+</script>
+<script>
+/* PairScope layer 3: filters + presets, watchlist alerts, paper trades, share links/cards, compare, CSV, theme, keyboard. */
+(function(){
+var LS={g:function(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},s:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+var X=function(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+var bd=$("body"),dt=$("detail"),tt,F=LS.g("ps_f",{liq:0,age:0,heat:0,safe:0}),PR=LS.g("ps_pr",{}),A=LS.g("ps_al",{on:0,move:15,heat:80}),BS=LS.g("ps_bs",{}),PT=LS.g("ps_pt",[]),CP=[];
+function mk(t,id,h){var e=document.createElement(t);e.id=id;if(h)e.innerHTML=h;return e}
+function toast(t){var e=$("pxt");e.textContent=t;e.classList.add("on");clearTimeout(tt);tt=setTimeout(function(){e.classList.remove("on")},3200)}
+function modal(h){$("pxm").firstChild.innerHTML='<div style="text-align:right"><button class="chip" data-x="mc">✕ Close</button></div>'+h;$("pxm").classList.add("on")}
+function closeM(){$("pxm").classList.remove("on")}
+var sg=function(n){return(n>0?"+":"")+(+n||0).toFixed(1)+"%"},cl=function(n){return n>=0?"up":"dn"};
+
+/* toolbar + panels */
+var tb=mk("div","px3",'<button class="chip" data-x="fp">🎚 Filters</button><button class="chip" data-x="pt">💼 Paper</button><button class="chip" data-x="cp">⚖ Compare (<span id="pxc">0</span>)</button><button class="chip" data-x="csv">⬇ CSV</button><button class="chip" data-x="th" aria-label="Toggle theme">🌓</button>');
+var pn=mk("div","pxp",'<label>Min liq $<input type="number" id="fl" min="0"></label><label>Max age h<input type="number" id="fa" min="0"></label><label>Min Heat<input type="number" id="fh" min="0" max="100"></label><label><input type="checkbox" id="fs">Passes risk check</label><select id="fpre" aria-label="Presets"></select><button data-x="ps">Save preset</button><button data-x="pd">Delete</button><button data-x="fr">Reset</button><span class="q" id="pxh"></span><div style="flex-basis:100%;height:0"></div><label><input type="checkbox" id="ao">🔔 Watchlist alerts</label><label>move ≥<input type="number" id="am" min="1"> %</label><label>Heat ≥<input type="number" id="ah" min="1" max="100"></label><span class="q">Works while this page is open. Telegram covers closed-page alerts.</span>');
+var ch=$("chips");ch.insertAdjacentElement("afterend",pn);ch.insertAdjacentElement("afterend",tb);
+document.body.appendChild(mk("div","pxt"));document.body.appendChild(mk("div","pxm","<div></div>"));
+function syncUI(){$("fl").value=F.liq||"";$("fa").value=F.age||"";$("fh").value=F.heat||"";$("fs").checked=!!F.safe;$("ao").checked=!!A.on;$("am").value=A.move;$("ah").value=A.heat;
+  $("fpre").innerHTML='<option value="">Presets…</option>'+Object.keys(PR).map(function(n){return'<option>'+X(n)+'</option>'}).join("")}
+function readUI(){F={liq:+$("fl").value||0,age:+$("fa").value||0,heat:+$("fh").value||0,safe:$("fs").checked?1:0};A.move=+$("am").value||15;A.heat=+$("ah").value||80;LS.s("ps_f",F);LS.s("ps_al",A);applyF()}
+pn.addEventListener("input",function(e){if(e.target.id!=="fpre")readUI()});
+$("ao").onchange=function(){A.on=this.checked?1:0;LS.s("ps_al",A);if(A.on){if(window.Notification&&Notification.permission==="default")Notification.requestPermission();toast("🔔 Alerts on for starred pairs")}};
+$("fpre").onchange=function(){if(PR[this.value]){F=Object.assign({},PR[this.value]);LS.s("ps_f",F);syncUI();applyF()}};
+function pass(r){return(!F.liq||r.l>=F.liq)&&(!F.age||!r.t||(Date.now()-r.t)/36e5<=F.age)&&(!F.heat||r.ht>=F.heat)&&(!F.safe||r.rs>=75)}
+function rowsOn(){return[].filter.call(bd.querySelectorAll("tr[data-i]"),function(t){return t.style.display!=="none"})}
+function applyF(){var h=0;[].forEach.call(bd.querySelectorAll("tr[data-i]"),function(tr){var r=D[+tr.getAttribute("data-i")],ok=!r||pass(r);tr.style.display=ok?"":"none";if(!ok)h++;var s=tr.querySelector(".star");if(s&&!s.getAttribute("role")){s.setAttribute("role","button");s.setAttribute("aria-label","Toggle watchlist")}});$("pxh").textContent=h?h+" hidden by filters":""}
+
+/* watchlist alerts */
+function fire(m){toast("🔔 "+m);try{navigator.vibrate&&navigator.vibrate([60,40,60]);if(window.Notification&&Notification.permission==="granted")new Notification("PairScope",{body:m})}catch(e){}}
+function alerts(){if(!A.on)return;D.forEach(function(r){var k=key(r);if(W.indexOf(k)<0||!r.p)return;var b=BS[k];if(!b){BS[k]={p:r.p,h:r.ht,t:Date.now()};return}
+  var m=(r.p/b.p-1)*100,msg=Math.abs(m)>=A.move?r.s+" "+sg(m)+" since last check":(r.ht>=A.heat&&b.h<A.heat?r.s+" Heat reached "+r.ht:"");
+  if(msg){fire(msg);BS[k]={p:r.p,h:r.ht,t:Date.now()}}else if(Date.now()-b.t>18e5)BS[k]={p:r.p,h:r.ht,t:Date.now()}});LS.s("ps_bs",BS)}
+
+/* paper trades */
+function prices(list){var by={};list.forEach(function(p){(by[p.c]=by[p.c]||[]).push(p.a)});return Promise.all(Object.keys(by).map(function(c){return fetch(B+"/tokens/v1/"+c+"/"+by[c].slice(0,30).join(",")).then(function(r){return r.json()}).catch(function(){return[]})})).then(function(a){var m={};dedupe([].concat.apply([],a).map(map)).forEach(function(r){m[key(r)]=r});return m})}
+function paperAdd(r){var a=parseFloat(prompt("Paper buy "+r.s+" at "+fprice(r.p)+"\nAmount in USD:","100"));if(!(a>0))return;PT.push({k:key(r),s:r.s,c:r.c,a:r.addr,e:r.p,u:a,t:Date.now()});LS.s("ps_pt",PT);toast("💼 Paper position opened")}
+function paperShow(){if(!PT.length){modal('<h3>💼 Paper trades</h3><p class="q">No positions yet. Open any pair and tap “Paper buy”. No wallet or real funds involved.</p>');return}
+  modal('<h3>💼 Paper trades</h3><p class="q">Loading prices…</p>');prices(PT).then(function(m){var tot=0,inv=0,h="";PT.forEach(function(p,i){var r=m[p.k],n=r?r.p:p.e,pl=(n/p.e-1)*100,d=p.u*pl/100;tot+=d;inv+=p.u;h+='<tr><td>'+X(p.s)+'</td><td>$'+p.u+'</td><td>'+fprice(p.e)+'</td><td>'+fprice(n)+'</td><td class="'+cl(pl)+'">'+sg(pl)+'</td><td class="'+cl(d)+'">'+(d>=0?"+":"-")+'$'+Math.abs(d).toFixed(2)+'</td><td><button class="chip" data-x="pdel" data-i="'+i+'" aria-label="Close position">✕</button></td></tr>'});
+    modal('<h3>💼 Paper trades</h3><div style="overflow-x:auto"><table><thead><tr><th>Token</th><th>Size</th><th>Entry</th><th>Now</th><th>P/L</th><th>P/L $</th><th></th></tr></thead><tbody>'+h+'</tbody></table></div><p>Total: <b class="'+cl(tot)+'">'+(tot>=0?"+":"-")+'$'+Math.abs(tot).toFixed(2)+'</b> on $'+inv.toFixed(0)+'</p><p class="q">Simulated only. Not financial advice.</p>')})}
+
+/* compare */
+function cmpShow(){if(CP.length<2){modal('<h3>⚖ Compare</h3><p class="q">Open a pair and tap “Compare” on 2 or 3 pairs first.</p>');return}
+  var rows=[["Price",function(r){return fprice(r.p)}],["Age",function(r){return fage(r.t)}],["Liquidity",function(r){return fm(r.l)}],["Volume 24h",function(r){return fm(r.v)}],["24h",function(r){return'<span class="'+cl(r.h24)+'">'+sg(r.h24)+'</span>'}],["1h",function(r){return'<span class="'+cl(r.h1)+'">'+sg(r.h1)+'</span>'}],["Txns",function(r){return r.tx.toLocaleString()}],["Heat",function(r){return r.ht}],["Risk score",function(r){return r.rs==null?"-":r.rs}]];
+  modal('<h3>⚖ Compare</h3><div style="overflow-x:auto"><table><thead><tr><th></th>'+CP.map(function(r){return'<th>'+X(r.s)+' <span class="q">'+X(r.c)+'</span></th>'}).join("")+'</tr></thead><tbody>'+rows.map(function(x){return'<tr><td class="q">'+x[0]+'</td>'+CP.map(function(r){return'<td>'+x[1](r)+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table></div><button class="chip" data-x="cclr" style="margin-top:10px">Clear</button>')}
+
+/* share link + image card */
+function link(r){return location.href.split("#")[0]+"#pair="+encodeURIComponent(r.c)+"/"+encodeURIComponent(r.addr)}
+function share(r){var c=document.createElement("canvas");c.width=1000;c.height=525;var g=c.getContext("2d"),gr=g.createLinearGradient(0,0,1000,525);gr.addColorStop(0,"#0b1220");gr.addColorStop(1,"#14264a");g.fillStyle=gr;g.fillRect(0,0,1000,525);
+  g.fillStyle="#e6e8ea";g.font="700 64px system-ui,sans-serif";g.fillText(r.s,50,120);g.fillStyle="#8b95a1";g.font="28px system-ui,sans-serif";g.fillText(r.c+"  ·  age "+fage(r.t),50,168);
+  g.fillStyle="#e6e8ea";g.font="700 54px system-ui,sans-serif";g.fillText(fprice(r.p),50,260);g.fillStyle=r.h24>=0?"#2ecc71":"#ff5c5c";g.font="700 40px system-ui,sans-serif";g.fillText("24h "+sg(r.h24),50,320);
+  g.fillStyle="#4da3ff";g.font="700 40px system-ui,sans-serif";g.fillText("Heat "+r.ht+(r.rs!=null?"   Risk "+r.rs:""),50,390);g.fillStyle="#8b95a1";g.font="26px system-ui,sans-serif";g.fillText("Liq "+fm(r.l)+"   Vol "+fm(r.v),50,440);g.fillStyle="#00e0b8";g.font="700 30px system-ui,sans-serif";g.fillText("PairScope",50,490);
+  var u=link(r);c.toBlob(function(b){try{var f=new File([b],r.s+"-pairscope.png",{type:"image/png"});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:r.s+" on PairScope",url:u}).catch(function(){});return}}catch(e){}
+    try{navigator.clipboard.writeText(u).catch(function(){})}catch(e){}var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=r.s+"-pairscope.png";a.click();toast("Link copied, image card saved")})}
+
+/* detail action bar */
+var _o3=openR;openR=function(r){_o3(r);try{var bar=mk("div","pxbar",'<button class="chip" data-x="sh">🔗 Share</button><button class="chip" data-x="pb">💼 Paper buy</button><button class="chip" data-x="cm">⚖ Compare</button>');bar.R=r;var g=$("grab");if(g)g.after(bar);else dt.prepend(bar)}catch(e){}};
+
+/* csv */
+function csv(){var rs=rowsOn().map(function(t){return D[+t.getAttribute("data-i")]}).filter(Boolean);if(!rs.length){toast("Nothing to export");return}
+  var q=function(v){return'"'+String(v==null?"":v).replace(/"/g,'""')+'"'},h="symbol,chain,token,pair,price,age_h,txns,vol24h,chg5m,chg1h,chg6h,chg24h,liquidity,heat,risk";
+  var t=h+"\n"+rs.map(function(r){return[r.s,r.c,r.addr,r.pair,r.p,r.t?((Date.now()-r.t)/36e5).toFixed(1):"",r.tx,r.v,r.m5,r.h1,r.h6,r.h24,r.l,r.ht,r.rs].map(q).join(",")}).join("\n");
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:"text/csv"}));a.download="pairscope-"+mode+".csv";a.click();toast("Exported "+rs.length+" rows")}
+
+/* theme */
+function theme(t){document.documentElement.setAttribute("data-theme",t);LS.s("ps_th",t);var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==="light"?"#f4f6f8":"#0b0e11"}
+theme(LS.g("ps_th","dark"));
+
+/* clicks */
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-x]");
+  if($("pxm").classList.contains("on")&&e.target===$("pxm")){closeM();return}if(!b)return;var x=b.getAttribute("data-x"),r=b.parentNode&&b.parentNode.R;
+  if(x==="fp")pn.classList.toggle("on");else if(x==="pt")paperShow();else if(x==="cp")cmpShow();else if(x==="csv")csv();else if(x==="mc")closeM();
+  else if(x==="th")theme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light");
+  else if(x==="ps"){var n=prompt("Preset name:");if(n){PR[n]=Object.assign({},F);LS.s("ps_pr",PR);syncUI();$("fpre").value=n}}
+  else if(x==="pd"){var s=$("fpre").value;if(s){delete PR[s];LS.s("ps_pr",PR);syncUI()}}
+  else if(x==="fr"){F={liq:0,age:0,heat:0,safe:0};LS.s("ps_f",F);syncUI();applyF()}
+  else if(x==="pdel"){PT.splice(+b.getAttribute("data-i"),1);LS.s("ps_pt",PT);paperShow()}
+  else if(x==="cclr"){CP=[];$("pxc").textContent=0;cmpShow()}
+  else if(x==="sh"&&r)share(r);else if(x==="pb"&&r)paperAdd(r);
+  else if(x==="cm"&&r){if(CP.some(function(p){return key(p)===key(r)}))CP=CP.filter(function(p){return key(p)!==key(r)});else if(CP.length>=3)return toast("Compare holds up to 3 pairs");else CP.push(Object.assign({},r));$("pxc").textContent=CP.length;toast("Comparing "+CP.length+" pair"+(CP.length>1?"s":""))}});
+
+/* keyboard: / search, j/k move, Enter open, s star, Esc close */
+var ki=-1;document.addEventListener("keydown",function(e){if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)){if(e.key==="Escape")e.target.blur();return}if(e.ctrlKey||e.metaKey||e.altKey)return;
+  var rs=rowsOn();if(e.key==="/"){e.preventDefault();var i=document.querySelector("input");if(i)i.focus()}
+  else if(e.key==="j"||e.key==="k"){e.preventDefault();ki=Math.max(0,Math.min(rs.length-1,ki+(e.key==="j"?1:-1)));[].forEach.call(bd.querySelectorAll("tr.kb"),function(t){t.classList.remove("kb")});if(rs[ki]){rs[ki].classList.add("kb");rs[ki].scrollIntoView({block:"nearest"})}}
+  else if(e.key==="Enter"&&rs[ki])rs[ki].click();else if(e.key==="s"&&rs[ki]){var st=rs[ki].querySelector(".star");if(st)st.click()}else if(e.key==="Escape")closeM()});
+
+/* after every table render */
+new MutationObserver(function(){ki=-1;applyF();alerts()}).observe(bd,{childList:true});syncUI();applyF();
+
+/* deep link: #pair=chain/address */
+var m=/^#pair=([^/]+)\/(.+)$/.exec(location.hash);if(m)try{fetch(B+"/tokens/v1/"+decodeURIComponent(m[1])+"/"+decodeURIComponent(m[2])).then(function(r){return r.json()}).then(function(a){var r=dedupe(a.map(map))[0];if(r)openR(r);else toast("Pair not found")}).catch(function(){toast("Could not open shared pair")})}catch(e){}
+})();
+</script>
+<script>
+/* PairScope layer 4: token pictures + launch-platform badges (pump.fun graduates get 🎓). */
+(function(){
+var bd=$("body");
+function hue(s){var h=0;s=String(s||"?");for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
+function plat(r){var a=r.addr||"",d=String(r.dex||"").toLowerCase(),c=String(r.c||"").toLowerCase();
+  if(c.indexOf("robinhood")>-1||d.indexOf("robinhood")>-1)return{n:"Robinhood",g:0};
+  if(d==="pumpfun")return{n:"pump.fun (bonding curve)",g:0};
+  if(d==="pumpswap")return{n:"pump.fun",g:1};
+  if(c==="solana"&&/pump$/.test(a))return{n:"pump.fun",g:1};
+  if(d==="moonshot")return{n:"Moonshot",g:0};
+  if(c==="solana"&&/bonk$/.test(a))return{n:"bonk.fun",g:0};
+  return null}
+function logo(r){var u=[],i=0,w=document.createElement("span"),p=plat(r);
+  if(/^https:\/\//.test(r.img||""))u.push(r.img);
+  if(r.c&&r.addr)u.push("https://dd.dexscreener.com/ds-data/tokens/"+encodeURIComponent(r.c)+"/"+encodeURIComponent(r.addr)+".png");
+  w.className="tk";if(p)w.title=(p.g?"Graduated on ":"Launched on ")+p.n;
+  function badge(){if(p&&p.g){var g=document.createElement("i");g.textContent="\uD83C\uDF93";w.appendChild(g)}}
+  function av(){w.textContent="";var b=document.createElement("b");b.textContent=String(r.s||"?").replace(/^[^A-Za-z0-9]+/,"").charAt(0).toUpperCase()||"?";b.style.background="hsl("+hue(r.s)+",45%,38%)";w.appendChild(b);badge()}
+  function next(){if(i>=u.length)return av();var m=new Image();m.alt="";m.width=m.height=26;m.loading="lazy";m.decoding="async";m.referrerPolicy="no-referrer";m.onerror=next;m.src=u[i++];w.textContent="";w.appendChild(m);badge()}
+  next();return w}
+function deco(){[].forEach.call(bd.querySelectorAll("tr[data-i]"),function(tr){if(tr.querySelector(".tk"))return;var r=D[+tr.getAttribute("data-i")],sy=tr.querySelector(".sym");if(!r||!sy)return;sy.parentNode.insertBefore(logo(r),sy)})}
+new MutationObserver(deco).observe(bd,{childList:true});deco();
+var _o4=openR;openR=function(r){_o4(r);try{var b=$("pxbar");if(!b)return;var p=plat(r);b.insertBefore(logo(r),b.firstChild);if(p){var s=document.createElement("span");s.className="pl";s.textContent=(p.g?"\uD83C\uDF93 Graduated on ":"Launched on ")+p.n;b.insertBefore(s,b.children[1])}}catch(e){}};
+})();
+</script>
+<script>
+(function(){
+var API="https://pairscope-featured.dr-hamzakhan0.workers.dev",g=function(i){return document.getElementById(i)},SOLWALLET="",PLANS=[],acct="";
+var A58="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function d58(s){var b=[0],i,j,c;for(i=0;i<s.length;i++){c=A58.indexOf(s[i]);if(c<0)throw new Error("bad address");for(j=0;j<b.length;j++){c+=b[j]*58;b[j]=c&255;c>>=8}while(c){b.push(c&255);c>>=8}}for(i=0;i<s.length&&s[i]==="1";i++)b.push(0);return new Uint8Array(b.reverse())}
+function e58(u){var d=[0],i,j,c,s="";for(i=0;i<u.length;i++){c=u[i];for(j=0;j<d.length;j++){c+=d[j]<<8;d[j]=c%58;c=(c/58)|0}while(c){d.push(c%58);c=(c/58)|0}}for(i=0;i<u.length&&u[i]===0;i++)s+="1";for(i=d.length-1;i>=0;i--)s+=A58[d[i]];return s}
+function phantom(){var p=(window.phantom&&window.phantom.solana)||window.solana;return p&&p.isPhantom?p:null}
+function msg(t,bad){var m=g("fpmsg");if(m){m.style.color=bad?"var(--down)":"var(--muted)";m.textContent=t}}
+function post(path,body){return fetch(API+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()})}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function transferTx(from,to,lamports,bh){
+  var out=[],push=function(a){for(var i=0;i<a.length;i++)out.push(a[i])};
+  push([1]);push(new Uint8Array(64));            // 1 empty signature slot
+  push([1,0,1,3]);                                // header + 3 accounts
+  push(d58(from));push(d58(to));push(new Uint8Array(32)); // payer, receiver, System Program
+  push(d58(bh));                                  // recent blockhash
+  push([1,2,2,0,1,12]);                           // 1 ix: program idx 2, accts [0,1], 12 bytes data
+  push([2,0,0,0]);                                // transfer instruction
+  var v=BigInt(lamports),i;for(i=0;i<8;i++){out.push(Number(v&255n));v>>=8n}
+  return new Uint8Array(out);
+}
+function load(){
+  fetch(API+"/plans").then(function(r){return r.json()}).then(function(d){
+    SOLWALLET=d.wallet;PLANS=d.plans;
+    g("fpchain").innerHTML=d.chains.map(function(c){return'<option value="'+c+'">'+c+'</option>'}).join("");
+    g("fpplan").innerHTML=d.plans.map(function(p){return'<option value="'+p.id+'">'+p.label+' · '+p.sol+' SOL</option>'}).join("");
+    g("fpinfo").textContent="Pick your token and a plan, then pay with Phantom. It goes live right after the payment confirms.";
+  }).catch(function(){g("fpinfo").textContent="Could not load plans. Please try again later."});
+}
+function submit(chain,address,plan,sig,tries){
+  return post("/submit",{chain:chain,address:address,plan:plan,sig:sig}).then(function(r){
+    if(r.ok)return r;
+    if(r.pending&&tries<8)return sleep(4000).then(function(){return submit(chain,address,plan,sig,tries+1)});
+    throw new Error(r.error||"Payment is still confirming. Message us your signature: "+sig);
+  });
+}
+function pay(){
+  var chain=g("fpchain").value,address=g("fpaddr").value.trim(),pid=g("fpplan").value,p=PLANS.filter(function(x){return x.id===pid})[0],ph=phantom();
+  if(!address){msg("Enter the token address.",1);return}
+  if(!ph){msg("Phantom wallet not found. Install Phantom or open this page in its in-app browser.",1);return}
+  g("fppay").disabled=true;msg("Checking token…");
+  post("/precheck",{chain:chain,address:address}).then(function(r){
+    if(!r.ok)throw new Error(r.error);
+    msg("Found "+r.token.symbol+". Connecting wallet…");
+    return ph.connect()
+  }).then(function(x){acct=x.publicKey.toString();return fetch(API+"/blockhash").then(function(r){return r.json()})})
+  .then(function(b){
+    msg("Confirm the payment in Phantom…");
+    var tx=transferTx(acct,SOLWALLET,Math.round(p.sol*1e9),b.blockhash);
+    return ph.request({method:"signAndSendTransaction",params:{message:e58(tx)}})
+  }).then(function(x){
+    var sig=x.signature||x;msg("Payment sent. Waiting for confirmation…");
+    return submit(chain,address,pid,sig,0)
+  }).then(function(){
+    msg("✅ Done! Your token is now featured and announced.");
+    g("fpaddr").value="";
+    if(typeof load==="function"&&window.__fpReload)window.__fpReload();
+  }).catch(function(e){
+    var m=e&&e.code===4001?"Payment cancelled.":(e&&e.message)||"Something went wrong.";msg(m,1)
+  }).then(function(){g("fppay").disabled=false});
+}
+g("fpconn").onclick=function(){var ph=phantom();if(!ph){msg("Phantom wallet not found.",1);return}ph.connect().then(function(x){acct=x.publicKey.toString();g("fpconn").textContent="Connected "+acct.slice(0,4)+"…"+acct.slice(-4)}).catch(function(){msg("Wallet connection rejected.",1)})};
+g("fppay").onclick=pay;
+g("lst").addEventListener("click",function(){if(!PLANS.length)load()});
+})();
+</script>
+<div id="tmview"><div class="tmw"><button type="button" id="tmclose">← Back to PairScope</button>
+<h1>Terms &amp; Disclaimer</h1>
+<div class="muted">Last updated: October 20, 2026</div>
+
+<div class="warn"><b>Important:</b> PairScope provides market data and tools for information only. It is <b>not financial, investment, legal or tax advice</b>. Crypto assets are extremely risky and you can lose everything you put in. Never invest more than you can afford to lose.</div>
+
+<div class="toc">
+<a href="#tm-use">1. Using PairScope</a>
+<a href="#tm-advice">2. Not financial advice</a>
+<a href="#tm-data">3. Data and scores</a>
+<a href="#tm-featured">4. Featured listings (paid)</a>
+<a href="#tm-wallet">5. Wallets and trading</a>
+<a href="#tm-alerts">6. Alerts and Telegram</a>
+<a href="#tm-privacy">7. Privacy</a>
+<a href="#tm-liability">8. Limitation of liability</a>
+<a href="#tm-changes">9. Changes</a>
+<a href="#tm-contact">10. Contact</a>
+</div>
+
+<h2 id="tm-use">1. Using PairScope</h2>
+<p>By using PairScope you agree to these terms. If you do not agree, please do not use the site. You must be old enough to enter into a binding agreement where you live, and you are responsible for making sure your use of the site and of crypto assets is legal in your country.</p>
+<p>Do not misuse the site: no attacks, scraping at a harmful rate, attempts to break or bypass its features, or use for anything unlawful.</p>
+
+<h2 id="tm-advice">2. Not financial advice</h2>
+<p>Everything on PairScope, including prices, rankings, Trending, Surges, Picks, Heat scores, Risk scores, contract scan results, charts, alerts and featured listings, is general information. Nothing is a recommendation to buy, sell or hold any token. Do your own research and speak to a qualified professional before making financial decisions.</p>
+<p>Many tokens, especially new ones, are scams, "rug pulls", honeypots or are highly volatile and illiquid. A token that appears on PairScope, even with a good score, can still go to zero.</p>
+
+<h2 id="tm-data">3. Data and scores</h2>
+<ul>
+<li>Market data comes from third parties such as DexScreener and GeckoTerminal. Security data comes from third parties such as GoPlus. It can be delayed, incomplete or wrong.</li>
+<li>Heat, Risk and contract scores are automated estimates based on the data available. They are <b>not audits and not guarantees</b>. A "pass" does not mean a token is safe, and missing data does not mean safe.</li>
+<li>Some chains and checks are not fully covered. Holder and liquidity-lock checks cover EVM chains only.</li>
+<li>We do not guarantee that the site will be available, accurate or error-free at any time.</li>
+</ul>
+
+<h2 id="tm-featured">4. Featured listings (paid)</h2>
+<ul>
+<li><b>Paid placement, not endorsement.</b> Featured tokens pay to be shown. A featured listing is advertising. It does not mean PairScope recommends, audits or vouches for the token or its team.</li>
+<li><b>Automatic checks.</b> Before payment, the token must have a trading pair, minimum liquidity and must not fail our basic contract checks. These checks are limited and cannot detect every scam. We may decline, remove or hide any listing at any time, including after payment, if we believe it is unsafe, misleading or breaks the law.</li>
+<li><b>Payments.</b> Payment is made in SOL on the Solana network to the wallet shown on the site. Blockchain payments are final and cannot be reversed by us. Make sure you pay the exact amount for the plan you choose. Network fees are paid by you.</li>
+<li><b>Duration.</b> A listing runs for the chosen plan length (for example 1, 7 or 30 days) starting when the payment is confirmed. Paying again for the same token extends it.</li>
+<li><b>Refunds.</b> Payments are generally non-refundable. If a payment is confirmed but the listing is declined by our checks or we cannot publish it, contact us with your transaction signature and we will review a refund or replacement case by case.</li>
+<li><b>Announcements.</b> When a listing goes live we may announce it on our Telegram group and on X, including the token name, symbol, chain, price, liquidity and a link.</li>
+<li><b>No guaranteed results.</b> We do not promise any amount of traffic, views, trades or price movement.</li>
+<li><b>Your responsibility.</b> By buying a listing you confirm you have the right to promote the token, that the information is accurate, and that the promotion complies with the laws that apply to you.</li>
+</ul>
+
+<h2 id="tm-wallet">5. Wallets and trading</h2>
+<p>PairScope is <b>non-custodial</b>. We never hold your keys, tokens or funds. If you trade through the site, the transaction is built by third-party routers (for example Jupiter or ParaSwap) and signed in your own wallet (for example Phantom or MetaMask). You are responsible for checking the network, token contract, amount, slippage and fees before you confirm.</p>
+<p>Blockchain transactions are irreversible. We are not responsible for losses from trades, failed or delayed transactions, slippage, price impact, MEV or sandwich attacks, wrong addresses, phishing, wallet problems or third-party service failures. "Paper trading" in PairScope is a simulation with no real funds.</p>
+
+<h2 id="tm-alerts">6. Alerts and Telegram</h2>
+<p>Price alerts and Telegram alerts are provided as a convenience and may be late, missed or inaccurate. Do not rely on them for time-sensitive financial decisions. You can disconnect Telegram alerts at any time from the site.</p>
+
+<h2 id="tm-privacy">7. Privacy</h2>
+<ul>
+<li>PairScope does not require an account. Your watchlist, alerts, paper trades and settings are stored in your own browser (local storage).</li>
+<li>If you connect Telegram alerts, a random anonymous ID generated by your browser and your alert settings are stored on our server so the bot can message you. Disconnecting removes the link.</li>
+<li>If you buy a featured listing, we process the token address, the payment transaction and the public wallet address on the blockchain. Blockchain data is public.</li>
+<li>We use privacy-friendly website analytics from Cloudflare to count visits. We do not sell your data.</li>
+<li>Third-party services you use through the site (wallets, DexScreener, GoPlus, Jupiter, ParaSwap, Telegram, X) have their own privacy practices.</li>
+</ul>
+
+<h2 id="tm-liability">8. Limitation of liability</h2>
+<p>PairScope is provided "as is" and "as available", without warranties of any kind. To the fullest extent allowed by law, PairScope and its owners, operators and contributors are not liable for any loss or damage, including lost funds, lost profits or indirect damages, arising from your use of the site, the data and scores shown, featured listings, third-party services or any token. You use PairScope at your own risk.</p>
+
+<h2 id="tm-changes">9. Changes</h2>
+<p>We may update these terms and the site at any time. The "last updated" date above shows the latest version. Continuing to use PairScope after a change means you accept it.</p>
+
+<h2 id="tm-contact">10. Contact</h2>
+<p>Questions, takedown requests or payment problems: message us on <a href="https://t.me/pairscopepsp" target="_blank" rel="noopener">Telegram</a> or <a href="https://x.com/PairScopescreen" target="_blank" rel="noopener">X</a>. For payment issues, include your transaction signature.</p>
+
+<p class="muted" style="margin-top:30px">This page is a general notice and not legal advice.</p>
+</div></div>
+<script>
+(function(){
+var v=document.getElementById("tmview");
+function open(){v.classList.add("open");v.scrollTop=0;document.body.style.overflow="hidden";try{history.replaceState(null,"","#terms")}catch(e){}}
+function close(){v.classList.remove("open");document.body.style.overflow="";try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
+document.addEventListener("click",function(e){
+  var t=e.target.closest&&e.target.closest("[data-terms]");if(t){e.preventDefault();open();return}
+  if(e.target.id==="tmclose"){close();return}
+  var a=e.target.closest&&e.target.closest("#tmview .toc a");
+  if(a){e.preventDefault();var el=document.getElementById(a.getAttribute("href").slice(1));if(el)v.scrollTo({top:el.offsetTop-10,behavior:"smooth"})}
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&v.classList.contains("open"))close()});
+if(location.hash==="#terms")open();
+})();
+</script>
+<script>
+/* PairScope: "Hot now" + "Most scanned today" cards */
+(function(){
+var API="https://pairscope-featured.dr-hamzakhan0.workers.dev";
+var bar=document.createElement("div");bar.id="pshot";bar.style.display="none";
+var tb=document.getElementById("tabs");if(!tb)return;tb.parentNode.insertBefore(bar,tb);
+var tod=null,top=[],E={};
+var CC={solana:"#9945ff",bsc:"#f3ba2f",ethereum:"#627eea",base:"#0052ff",arbitrum:"#28a0f0",polygon:"#8247e5",optimism:"#ff0420",avalanche:"#e84142"};
+function key(c,a){return c+":"+a}
+function av(o){var u=o.img&&/^https:\/\/(cdn|dd)\.dexscreener\.com\//.test(o.img)?o.img:"";
+  return u?'<img class="hv" src="'+esc(u)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="hv hl">'+esc((o.s||"?").charAt(0).toUpperCase())+'</span>'}
+function fp(p){if(!p)return"";if(p>=1)return"$"+p.toFixed(2);if(p>=0.01)return"$"+p.toFixed(4);return"$"+p.toFixed(10).replace(/0+$/,"")}
+function pc(v){if(v==null||!isFinite(v))return"";return'<span class="'+(v>=0?"hv-up":"hv-dn")+'">'+(v>=0?"▲ +":"▼ ")+v.toFixed(1)+'%</span>'}
+function chain(c){return'<span class="hv-ch" style="border:1px solid '+(CC[c]||"var(--line)")+'55">'+esc(c)+'</span>'}
+function spark(r){
+  if(!r||!r.p)return"";var P=r.p,ch=[r.h24,r.h6,r.h1,r.m5],v=[];
+  for(var i=0;i<4;i++){var d=1+(+ch[i]||0)/100;if(d<=0.01)return"";v.push(P/d)}
+  v.push(P);var mn=Math.min.apply(null,v),mx=Math.max.apply(null,v),W=120,H=34,rg=mx-mn||1;
+  var pts=v.map(function(y,i){return[(i*W/4).toFixed(1),(H-3-(y-mn)/rg*(H-6)).toFixed(1)]});
+  var line=pts.map(function(p,i){return(i?"L":"M")+p[0]+" "+p[1]}).join(" ");
+  var up=(+r.h24||0)>=0;
+  return'<svg class="hv-sp" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="color:var('+(up?"--up":"--down")+')" aria-hidden="true"><path d="'+line+' L'+W+' '+H+' L0 '+H+' Z" fill="currentColor" opacity=".13"/><path d="'+line+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+window.__spark=spark;
+function hotCard(r){
+  return'<div class="hv-card hv-hot" data-hc="'+esc(r.c)+'" data-ha="'+esc(r.addr)+'" role="button" tabindex="0">'+av(r)+
+  '<div style="min-width:0;flex:1"><div class="hv-sym">'+esc(r.s)+' '+chain(r.c)+'</div>'+
+  '<div class="hv-p">'+fp(r.p)+' '+pc(r.h24)+'</div>'+
+  '<div class="hv-pills"><span class="hv-pill">⚡ Heat '+Math.round(r.ht||0)+'</span><span class="hv-pill">🛡️ Risk '+r.rs+'</span></div></div>'+spark(r)+'</div>'}
+function topCard(o,i){
+  var r=E[key(o.c,o.a)]||{},medal=["🥇","🥈","🥉"][i]||"#"+(i+1);
+  return'<div class="hv-card" data-hc="'+esc(o.c)+'" data-ha="'+esc(o.a)+'" role="button" tabindex="0" style="animation-delay:'+(i*60)+'ms">'+
+  '<span class="hv-rank">'+medal+'</span><span class="hv-n">👁 '+(+o.n||0)+'</span>'+av({img:r.img,s:o.s})+
+  '<div class="hv-sym">'+esc(o.s||r.s||"?")+'</div>'+chain(o.c)+
+  '<div class="hv-p">'+(r.p?fp(r.p)+' '+pc(r.h24):'&nbsp;')+'</div>'+spark(r)+'</div>'}
+function draw(){
+  var h="";
+  if(tod)h+='<div class="hv-hd"><span class="hv-t">⭐ Hot now</span><span class="hv-s">High Heat · lower Risk · not advice · line = 24h trend</span></div>'+hotCard(tod);
+  if(top.length)h+='<div class="hv-hd"><span class="hv-t">🔥 Most scanned today</span><span class="hv-s">👁 = scans</span></div><div class="hv-strip">'+top.map(topCard).join("")+'</div>';
+  bar.innerHTML=h;bar.style.display=h?"block":"none";
+}
+function pick(){
+  if(tod||typeof D==="undefined"||!D||!D.length)return;
+  var best=null;D.forEach(function(r){if(r.rs>=75&&r.l>=50000&&(!best||r.ht>best.ht))best=r});
+  if(best){tod=best;E[key(best.c,best.addr)]=best;draw()}
+}
+var n=0,iv=setInterval(function(){pick();if(tod||++n>15)clearInterval(iv)},2000);
+function enrich(o){
+  var k=key(o.c,o.a);if(E[k])return;
+  fetch(B+"/tokens/v1/"+encodeURIComponent(o.c)+"/"+encodeURIComponent(o.a)).then(function(r){return r.json()}).then(function(l){
+    var rows=dedupe(l.map(map));if(rows.length){E[k]=rows[0];draw()}}).catch(function(){});
+}
+function loadTop(){fetch(API+"/top").then(function(r){return r.json()}).then(function(l){top=Array.isArray(l)?l:[];draw();top.forEach(enrich)}).catch(function(){})}
+loadTop();setInterval(loadTop,120000);
+function act(e){
+  var b=e.target.closest&&e.target.closest("[data-hc]");if(!b)return;
+  var c=b.getAttribute("data-hc"),a=b.getAttribute("data-ha"),r=E[key(c,a)];
+  if(r){openR(r);return}
+  fetch(B+"/tokens/v1/"+encodeURIComponent(c)+"/"+encodeURIComponent(a)).then(function(x){return x.json()}).then(function(l){var rows=dedupe(l.map(map));if(rows.length)openR(rows[0])}).catch(function(){});
+}
+bar.addEventListener("click",act);
+bar.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();act(e)}});
+bar.addEventListener("error",function(e){var t=e.target;if(t&&t.tagName==="IMG"&&t.classList.contains("hv")){var sp=document.createElement("span");sp.className="hv hl";sp.textContent="?";t.replaceWith(sp)}},true);
+function logScan(r){
+  try{var k="ps_sc_"+new Date().toISOString().slice(0,10)+r.c+r.addr;if(localStorage.getItem(k))return;localStorage.setItem(k,"1")}catch(e){}
+  fetch(API+"/scan",{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({c:r.c,a:r.addr,s:r.s})}).catch(function(){});
+}
+var _o=openR;openR=function(r){_o(r);try{logScan(r)}catch(e){}};
+})();
+</script>
+<script>
+/* PairScope upgrades: headline checker, per-token meta/canonical, accessibility */
+(function(){
+var g=function(i){return document.getElementById(i)};
+function sa(el,o){if(el)for(var k in o)el.setAttribute(k,o[k])}
+/* headline checker */
+var hca=g("hca");
+function heroScan(){var v=hca.value.trim();if(!v){hca.focus();return}
+  mode="check";tabs();var s=g("ckc");if(s&&s.querySelector('option[value="auto"]'))s.value="auto";g("cka").value=v;scanToken();
+  var c=g("checker");if(c&&c.scrollIntoView)c.scrollIntoView({behavior:"smooth",block:"start"})}
+g("hgo").onclick=heroScan;hca.onkeydown=function(e){if(e.key==="Enter")heroScan()};
+/* keep the scan in the URL so every scan is shareable */
+var _s=scanToken;scanToken=function(){_s();var a=g("cka").value.trim(),c=g("ckc").value;
+  if(a)try{history.replaceState(null,"","?scan="+encodeURIComponent(a)+(c&&c!=="auto"?"&c="+encodeURIComponent(c):""))}catch(e){}};
+/* tabs: ARIA roles, hide the hero inside the Checker tab */
+var _t=tabs;tabs=function(){_t();var h=g("hero");if(h)h.style.display=mode==="check"?"none":"";
+  var t=g("tabs");sa(t,{role:"tablist","aria-label":"Views"});
+  [].forEach.call(t.children,function(b){sa(b,{role:"tab","aria-selected":b.classList.contains("on")?"true":"false"})})};
+tabs();
+/* per-token title, description and canonical (crawlers: see og-worker.js) */
+var O={d:document.title,od:(document.querySelector('meta[property="og:description"]')||{}).content||"",
+  md:(document.querySelector('meta[name="description"]')||{}).content||""};
+function cano(u){var l=document.querySelector('link[rel="canonical"]');if(!l){l=document.createElement("link");l.rel="canonical";document.head.appendChild(l)}l.href=u}
+function setM(t,d,u){document.title=t;
+  [['meta[property="og:title"]',t],['meta[name="twitter:title"]',t],['meta[property="og:description"]',d],['meta[name="description"]',d]].forEach(function(p){var m=document.querySelector(p[0]);if(m)m.setAttribute("content",p[1])});cano(u)}
+function resetM(){document.title=O.d;
+  [['meta[property="og:title"]',"PairScope"],['meta[name="twitter:title"]',"PairScope"],['meta[property="og:description"]',O.od],['meta[name="description"]',O.md]].forEach(function(p){var m=document.querySelector(p[0]);if(m)m.setAttribute("content",p[1])});cano(location.origin+location.pathname)}
+var lastF=null;
+var _o=openR;openR=function(r){lastF=document.activeElement;_o(r);
+  try{var rk=r.rs!=null?r.rs:riskCalc(r).s;
+    setM(r.s+"/"+r.q+" on "+r.c+": price, risk & contract check | PairScope",
+      r.s+" "+fprice(r.p)+" ("+(r.h24>=0?"+":"")+r.h24.toFixed(1)+"% 24h) · Liquidity "+fm(r.l)+" · Risk "+rk+"/100. Live data and contract security scan on PairScope.",
+      location.origin+location.pathname+"?c="+encodeURIComponent(r.c)+"&a="+encodeURIComponent(r.addr));
+    sa(g("cl"),{"aria-label":"Close token details"});sa(g("shr"),{"aria-label":"Share this token"});
+    setTimeout(function(){var c=g("cl");if(c)c.focus()},60)}catch(e){}};
+document.addEventListener("click",function(e){if(e.target&&e.target.id==="cl"){resetM();if(lastF&&document.contains(lastF)&&lastF.focus)lastF.focus()}});
+/* accessibility: focusable rows/headers/stars, keyboard activation, Escape closes details */
+function rows(){
+  [].forEach.call(document.querySelectorAll("#body tr[data-i]"),function(tr){var s=tr.querySelector(".sym");sa(tr,{tabindex:"0","aria-label":"Open "+(s?s.textContent:"token")+" details"})});
+  [].forEach.call(document.querySelectorAll("#body .star"),function(s){var on=s.classList.contains("on");sa(s,{role:"button",tabindex:"0","aria-label":on?"Remove from watchlist":"Add to watchlist","aria-pressed":on?"true":"false"})});
+  [].forEach.call(document.querySelectorAll("th[data-k]"),function(th){sa(th,{scope:"col",tabindex:"0","aria-sort":th.className==="on"?(dir>0?"ascending":"descending"):"none"})})}
+new MutationObserver(rows).observe(g("body"),{childList:true});rows();
+document.addEventListener("keydown",function(e){var t=e.target;
+  if(e.key==="Escape"&&g("detail").classList.contains("open")&&!/INPUT|SELECT|TEXTAREA/.test(t.tagName)){var c=g("cl");if(c)c.click();return}
+  if(e.key!=="Enter"&&e.key!==" ")return;
+  if((t.classList&&t.classList.contains("star"))||(t.tagName==="TR"&&t.hasAttribute("data-i"))||(t.tagName==="TH"&&t.hasAttribute("data-k"))){e.preventDefault();t.click()}});
+})();
+</script>
+<script>
+/* PairScope: sparkline on every list row */
+(function(){
+var tb=document.getElementById("body");if(!tb||!window.MutationObserver)return;
+var busy=false;
+function run(){
+  if(busy||!window.__spark||typeof D==="undefined")return;busy=true;
+  try{
+    tb.setAttribute("data-mode",typeof mode!=="undefined"?mode:"");
+    Array.prototype.forEach.call(tb.querySelectorAll("tr[data-i]"),function(tr){
+      if(tr.querySelector(".hv-sp"))return;
+      var r=D[+tr.getAttribute("data-i")],td=tr.firstElementChild;if(!r||!td)return;
+      var h=window.__spark(r);if(h)td.insertAdjacentHTML("beforeend",h);
+    });
+  }catch(e){}
+  busy=false;
+}
+new MutationObserver(function(){if(!busy)run()}).observe(tb,{childList:true});
+run();
+})();
+</script>
+<script>
+(function(){
+  /* ===== EDIT THESE TWO LINES ===== */
+  var PSP_CA="8VGiuPDzrvC9bXVHnt6bbriFMSS2TPXWMLth1joepump";
+  var PSP_CHAIN="solana";   /* solana | ethereum | base | bsc */
+  /* ================================ */
+  var d=document,g=function(i){return d.getElementById(i)};
+  if(!PSP_CA)return;
+  var ex={solana:"https://solscan.io/token/",ethereum:"https://etherscan.io/token/",base:"https://basescan.org/token/",bsc:"https://bscscan.com/token/"};
+  g("pspca").textContent=PSP_CA;g("psptag").textContent="LIVE";g("pspbtns").hidden=false;
+  g("pspdex").href="https://dexscreener.com/"+PSP_CHAIN+"/"+PSP_CA;
+  g("pspbuy").href=PSP_CHAIN==="solana"?"https://jup.ag/swap/SOL-"+PSP_CA:"https://dexscreener.com/"+PSP_CHAIN+"/"+PSP_CA;
+  g("psppump").href="https://pump.fun/coin/"+PSP_CA;
+  if(PSP_CHAIN!=="solana")g("psppump").style.display="none";
+  g("pspscan").href=(ex[PSP_CHAIN]||ex.solana)+PSP_CA;
+  g("pspcopy").onclick=function(){
+    var b=this,done=function(){b.textContent="Copied ✓";setTimeout(function(){b.textContent="Copy CA"},1800)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(PSP_CA).then(done,function(){})}
+    else{var t=d.createElement("textarea");t.value=PSP_CA;d.body.appendChild(t);t.select();try{d.execCommand("copy");done()}catch(e){}d.body.removeChild(t)}
+  };
+  /* share $PSP: X, Telegram, WhatsApp, native share / copy link */
+  var shareLink=location.origin+location.pathname+"?scan="+encodeURIComponent(PSP_CA)+"&c="+encodeURIComponent(PSP_CHAIN);
+  var shareText="$PSP is the community coin of PairScope, the free DEX scanner with built-in contract safety checks. Check it yourself:";
+  g("pspshare").hidden=false;
+  g("pspx").href="https://twitter.com/intent/tweet?text="+encodeURIComponent(shareText)+"&url="+encodeURIComponent(shareLink);
+  g("psptg").href="https://t.me/share/url?url="+encodeURIComponent(shareLink)+"&text="+encodeURIComponent(shareText);
+  g("pspwa").href="https://wa.me/?text="+encodeURIComponent(shareText+" "+shareLink);
+  g("pspsharebtn").onclick=function(){
+    var b=this,done=function(){b.textContent="Link copied ✓";setTimeout(function(){b.textContent="🔗 Share / Copy link"},1800)};
+    if(navigator.share){navigator.share({title:"$PSP on PairScope",text:shareText,url:shareLink}).catch(function(){});return}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(shareLink).then(done,function(){prompt("Copy this link",shareLink)})}
+    else{prompt("Copy this link",shareLink)}
+  };
+})();
+</script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "941b5966f6194fd1b04a161bb81adb5d"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
